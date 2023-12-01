@@ -1,0 +1,8 @@
+Rubrica Modelo regressão 13/11
+
+(2.5) 1. Propor modelo Regressão Multipla (Continua e Categorica)
+(2.5) 2. Modelo LM
+(2.5) 3. Interpretar efeitos coeficientes
+(2.5) 4. Explicar R2 
+
+

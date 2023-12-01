@@ -1,0 +1,139 @@
+---
+title: "Gabarito P1"
+date: "2023-10-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+load(url("https://github.com/ccolonescu/PoEdata/raw/master/data/cps4.rda"))
+
+cps4 <- cps4 |>
+  select(wage, exper)  
+```
+
+```{r}
+head(cps4)
+```
+
+-   `wage`: Salário por Hora.
+-   `exper`: Anos de Experiencia Pós-Educacao.
+
+```{r}
+summary(cps4)
+```
+
+1.  Faca uma descricao estatística geral das medidas de posição amostrais das varíaveis fornecidas, incluindo a interpretação dos quartis.
+
+Para a variável `wage` pode ser observado que:
+
+-   O salário-hora mínimo da amostra é de \$1,00 e máximo de \$173,00. Como o valor máximo de \$173,00 é muito distante do terceiro quartil, há sinais da presença de *outliers* na base de dados.
+-   O salário médio é de \$20,14 e o salário mediano é de \$16,60 na amostra. O valor mais elevado da média reforça a hipótese da presença de *outliers* que criam um viés para cima na média (i.e \$173,00).
+-   Para o primeiro e terceiro quartil temos os valores de \$11,27 e \$25,00, respectivamente, portanto 25% dos indivíduos da amostra têm salário máximo igual ou menor que \$11,27. Por fim, o terceiro quartil mostra que 25% dos indivíduos têm salário-hora igual ou maior que \$25,00.
+-   A diferença entre média e mediana e a presença de *outliers* indica que a distribuição dos salários não deve ser uma distribuição normal. Em geral, variáveis como renda e salários apresentam forte assimetria a direita, refletindo os altos níveis de concentração e desigualdade.
+
+Para a variável `exper`:
+
+-   O valor minimo é de 1 e máximo de 70 anos de experiência, na amostra. 
+
+-   Considerando a mediana 26 anos e a média 25 anos, temos que, diferentemente dos salários horas, os anos de experiência não parecem conter valores extremos. 
+
+-   Para o primeiro e terceiro quartil temos os valores de 15 e 36 anos, respectivamente. Portanto, 25% dos indivíduos na amostra 15 de anos de experiencia ou menos. A partir do terceiro quartil,  observa-se que 25\% dos indivívuos tem 36 anos de experiência ou mais. 
+
+2.  Interprete o diagrama de dispersão, indicando se a covariância dos dados $cov(y_i, x_i)$ parece ser positiva ou negativa. Explique, utilizando noções de modelos ou *insights* econômicos, o que poderia justificar a relação observada entre as variáveis.
+
+```{r}
+plot(cps4$exper, cps4$wage)
+```
+
+O gráfico não é muito claro a respeito do sentido da relação entre as variáveis, isto é, se a covariância entre os salários e anos de experiência é negativa ou positiva. Da perspectiva econômica, porém, espera-se que, tudo o mais constante, os anos de experiência estejam associados a maiores salários-hora. Modelos de cunho neoclássico que explicam a determinação dos salários na economia, concluem, dedutivamente, que os salários reais são determinados  pela produtividade marginal do trabalho. Neste sentido, espera-se que a experiência aumente, justamente, a produtividade marginal do trabalho por meio do processo de aprendizagem. **[diferentes respostas poderiam ter sido dadas, com base em diferentes insights ou teorias econônomicas.]**.
+
+3.  Escreva a equação do modelo (FRA estocástica) a ser estimada, definindo os termos da mesma (varíaveis dependente e independente, coeficientes de regressão e demais termos presentes)
+
+A FRA estocástica, considerando-se que os coeficientes de regressão ainda serão estimados, é dada por: 
+
+$$
+wage_i = \hat{\beta_1} + \hat{\beta_2}exper_i + \hat{u_i}
+$$ 
+onde, 
+
+$wage_i$ -- Variável dependente (Salário por hora, em dólares);
+
+$\hat \beta_1$ -- estimativa amostral do intercepto, que representa o valor médio dos salários-hora quando os anos de experiência são zero; 
+
+$\hat \beta_2$ -- estiamtiva amostral do coeficiente angular, que representa a variação dos salários-hora dada a variação de 1 ano de trabalho;
+
+$exper_i$ --  variável independente (Anos de experiência pós-educação);
+
+$\hat u_i$ -- termo de erro estocástico, a ser melhor explicado na questão 4). 
+
+4.  Explique o significado do termo de erro estocástico.
+
+O termo de erro estocástico $u_i$ representa todas as variáveis omitidas no modelo, mas que afetam $Y$, isto é, a variável dependente. Há algumas possíveis razões para que todas essas variáveis não façam parte do modelo proposto:
+
+-   *Modelo teórico incompleto*: pode ser que a teoria que explica o comportamento de $Y$, se existe alguma, é incompleta, o termo de erro representaria, portanto, todas essas variáveis excluídas, omitidas ou não identificadas.
+
+-   *Indisponibilidade dos dados*: mesmo se soubermos todas as variáveis que explicam a variável $Y$ caso não haja a disponibilidade dos dados não há como estimarmos o modelo com todas elas, então omitimos essas variáveis através do termo de erro.
+
+-   *Variáveis essenciais x secundárias*: suponha um modelo que, além da variável $X_i$, também há várias outras variáveis já identificadas, porém que conjuntamente causam um impacto pequeno e consideravelmente irrelevante para a explicação de $Y$. São tratadas, portanto, como uma variável aleatória $u_i$.
+
+-   *Aleatoriedade intrínseca do comportamento humano*: mesmo que sejam identificadas todas as variáveis relevante para o modelo, elas nunca irão explicar completamente o comportamento de $Y$, devido à aleatoriedade intrínseca aos valores de $Y$. O termo de erro também engloba essa aleatoriedade.
+
+-   *Variáveis proxy pouco adequadas*: na prática os dados podem estar infestados de erros de medição, estes erros são representados também pelo termo de erro estocástico.
+
+-    *Princípio da parcimônia*: de acordo com a navalha de Occam, o ideal seria formular o modelo de regressão mais simples possível.
+
+-   *Forma funcional errada*: mesmo se as variáveis explanatórias de um fenômeno forem teoricamente corretas e mesmo se encontrarmos dados para essas variáveis, podemos acabar empregando uma forma funcional pouco adequada para estimarmos nosso modelo
+
+5.  Escreva a equação da reta do modelo estimado (FRA não estocástica e com os coeficientes de regressão estimados). Interprete os coeficientes de regressão estimados economicamente (intercepto e coeficiente angular)
+
+```{r}
+mod <- lm(wage ~ exper, cps4)
+summary(mod)
+```
+
+$$\hat{wage_i} = 18.11978 + 0.07782exper_i$$
+
+Interpretação:
+
+-   Intercepto: Indica o salário-hora médio que independe dos anos de experiência. Quando consideramos zero (0) anos de experiencia `exper`, tudo o mais constante, o salário hora esperado ou médio será \$18,11. Podemos dizer, também, que o intercepto representa o ponto de início da curva de regressão economicamente válida,  já que existe uma restrição econômica para o domínio da função especificada, $exper \geq 0$, neste modelo. 
+
+-   Coeficiente Angular: Dada a variação de uma unidade na variável **independente** `exper`, diga-se o aumento de 1 ano de experiência dos indivíduos,  espera-se, em média, uma variação positiva de \$0,07 nos salários-hora. Tratando-se de dados amostrais, os valores estimados são estimativas do $E(wage_i | exper_i)$, isto é, dos valores esperados ou médios dos salários, dado os anos de experiência. 
+
+6.  Bônus: Qual método de estimação foi aplicado para obtenção do modelo? O que esse método busca em relação a Soma dos Quadrados dos Resíduos (SQR). Represente a equação da SQR em função dos coeficientes de regressão.
+
+O método utilizado é o de Minimos Quadrados Ordinários (MQO), que busca encontrar o melhor ajuste para os dados no modelo, a partir da minimização da Soma dos Quadrados dos Resíduos (SQR). Pode-se definir a equação da SQR em função dos coeficientes de regressão. Partimos das equações da FRA (Função de Regressão Amostral) estocástica e da FRA não estocástica, abaixo:
+
+$$
+Y_i = \hat{\beta}_1 + \hat{\beta}_2 X_i + u_i
+$$
+
+$$
+\hat{Y}_i = \hat{\beta}_1 + \hat{\beta}_2 X_i
+$$
+
+Portanto,
+
+$$
+Y_i = \hat{Y}_i + u_i
+$$
+
+E isolando o termo de erro, temos:
+
+$$
+u^i = Y_i - \hat{Y}_i
+$$
+
+
+Substituindo com a expressão para $\hat Y_i$, temos:
+$$
+u^i = Y_i - \hat{\beta}_1 + \hat{\beta}_2 X_i
+$$
+
+Finalmente, aplicando a soma dos quadrados em ambos os lados da equação, temos:
+
+$$
+SQR = \sum_{i} u^{2}_i = \sum_{i} (Y_i - \hat{\beta}_1 + \hat{\beta}_2 X_i)^2
+$$
+
+A equação acima é a expressão da Soma dos Quadrados dos Resíduos (SQR) em função dos coeficientes de regressão a serem estimados. O método de MQO retorna estimativas dos coeficientes de regressão ($\beta_1$ e $\beta_2$) que minimizam a SQR para o conjunto de dados fornecido. Por ser uma função quadrática e de concavidade voltada para cima, a SQR tem um ponto de mínimo. Neste ponto a derivada da SQR, isto é, a inclinação da reta tangente no ponto,  é zero. 

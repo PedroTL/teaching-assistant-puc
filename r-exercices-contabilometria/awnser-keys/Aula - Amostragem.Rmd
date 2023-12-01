@@ -1,0 +1,199 @@
+---
+title: "Notas Amostragem"
+author: "Prof. Paulo R. Silva Oliveira"
+date: "2023-08-28"
+output: html_document
+---
+
+
+```{r, include= FALSE}
+library(tidyverse)
+```
+
+
+# Introdução 
+
+Lembremos que um *elemento* é entidade para a qual os dados são coletados (ex. pessoas, firmas, países, etc..). A *população* é a coleção de elementos de interesse (ex. alunos da PUC-Campinas, inclui todos os alunos da PUC-Campinas). Uma amostra é um *subconjunto* da *população*. 
+
+Estimativas amostrais, da média, por exemplo, são estimativas dos reais parâmetros da população. Portanto, apresetarão erros de estimação. A estatística tem ferramentas para determinar o quão grande esses erros podem ser. 
+
+Existem dois tipos de população: finitas e infinitas. A amostragem de populações finitas pode ser feita de forma mais simples a partir uma lilsta de elementos na população. A amostragem de populações infinitas (ex. produtos de um processo produtivo continuado) são menos intuitivas. No contexto da amostragem é útil aprender como utilizar a amostra para estimar medidas de posição e variabilidade, bem como como utilizar distribuições de probabilidades amostrais para realizar testes de hipótese sobre a qualidade das estimativas. 
+
+
+# O problema da *Eletronics Associates, Inc.* (EAI)
+
+```{r}
+# Abrir o banco usando a função read.csv2()
+EAI <- read.csv2("/Users/paulooliveira/OneDrive/PAULO_HD/PUC/AULAS/2023_2/CONTABILOMETRIA/Bases/EAI.csv", stringsAsFactors = TRUE) %>%
+  drop_na()
+
+# Ver primeiras linhas do banco
+head(EAI)
+```
+
+O banco contém 2500 observações. Os *elementos* são gerentes, os dados representam a *população* de gerentes da EAI. A variável *Salary* representa a média anual salarial de cada gerente e a variável *Training* representa se o gerente em questão participou ou não de um programa de treinamento. 
+
+Por se tratar dos dados populacionais, poderíamos calcular os *parâmetros* média, desvio padrão e proporção de participação. 
+
+Para variável numérica contínua *Salary*, vamos calcular a média populacional $\mu$ e o desvio padrão populacional $\sigma$.
+
+```{r}
+mu = mean(EAI$Salary) # média do salário médio anual dos gerentes (parâmetro)
+mu
+sigma = sd(EAI$Salary) # desvio padrão do salário médio anual dos gerentes (parâmetro)
+sigma
+```
+
+Portanto, $\mu_{sal} = 51 800$ e $\sigma_{sal} = 4000$. Para a variável categórica binária *Training*, podemos calcular a frequência.
+
+```{r}
+summary(EAI$Training) # aplicando a função para resumir a frequência de cada resposta. 
+```
+
+Portanto, $p_{tr} = 0.60$, ou uma proporção de $60\%$ dos gerentes participaram do programa de treinamento. 
+
+A partir de agora, vamos supor que não temos os dados da população e precisamos trabalhar com amostras. 
+
+# Selecionando uma amostra
+
+## Amostragem de População Finita
+
+Amostragem de uma população finita pode ser feita pelo método de *amostragem aleatória simples*. **Uma amostragem aleatória simples de tamanho $n$ de uma população finita de tamanho $N$ é uma amostra selecionada de tal forma que cada amostra possível de tamanho $n$ tem a mesma probabilidade de ser selecionada.**
+
+Há várias maneiras de selecionar gerentes aleatoriamente a partir da população. Em geral os métodos de seleção para esse tipo de amostragem assemelham-se a um sorteio. Vamos utilizar o sorteio de amostras com a função *smaple()* do R. 
+
+```{r}
+set.seed(123) # travar a amostra 
+s1_n30 <- sample_n(EAI,30) # com reposição ou sem reposição?
+head(s1_n30) # verificando as primeiras linhas das amostra. 
+```
+
+## Amostragem de População Infinita 
+
+Para o caso de amostras infinitas a recomendação é utilizar o *método de amostragem aleatória*. **Uma amostra aleatória de tamanho $n$ de uma população infinita é uma amostra selecionada de tal forma que duas condições são satisfeitas: i. cada elemento selecionado vem de uma mesma população; ii. cada elemento é selecionado de forma independente.**
+
+Selecionar indivíduos de uma mesma população, em caso de processos contínuos, significa, em geral, que os resultados do processo foram selecionados em pontos próximos no tempo. A condição (ii) visa evitar o viés de seleção do entrevistador ou vícios no processo produtivo. 
+
+# Estimativas pontuais 
+
+O jeito mais simples de obter as estimativas a partir de uma amostra é obter as estimativas amostrais pontuais. Definimos o estimador da média como $\bar x_{sal}$, o estimador do desvio padrão como $s_{sal}$ e o estimador da participação no programa de formação com $\bar p$. 
+
+Utilizando algumas funções do R para obter nossas estimativas pontuais para e média e para o desvio padrão dos salários (a partir da amostra).
+
+```{r}
+x_barra = mean(s1_n30$Salary) # calculando a média dos salários amostral
+x_barra
+s = sd(s1_n30$Salary)
+s
+```
+
+Verifica-se que existem diferenças em relação aos parâmetros populacionais. Muito raramente as estimativas amostrais pontuais serão exatamente iguais aos parâmetros populacionais. 
+
+Nossa estimativa do percentual da participação no programa de participação será: 
+
+```{r}
+p_barra = nrow(s1_n30[s1_n30$Training == "Yes",])/nrow(s1_n30)
+p_barra
+```
+
+Note que a estimativa amostral difere do parâmetro populacional. 
+
+Em alguns casos é preciso diferenciar a população de interesse da população amostrada. Em geral a diferença entre essas populações indicam um viéis de seleção. 
+
+# Introdução a distribuição amostral 
+
+Sabemos que a seleção de diferentes amostras vão retornar diferentes estimativas pontuais dos verdadeiros parâmetros populacionais. Mas será que existe algum padrão para o retorno das estimativas de diferentes amostras? Podemos estudar melhor a distribuição de frequência das estimativas de diferentes amostras para intuir conceitos muito importantes para inferência estatística. 
+
+A variável $\bar x$, ou seja, uma média amostral, é uma variável aleatória, e portanto possui uma distribuição de probabilidade. Essa distribuição é chamada de *distribuição amostral de $x$*. 
+
+**A distrinbuição amostral de $\bar x$ é a distribuição de probabilidade de todos os valores possíveis da médias amostrais $\bar x$**
+
+Como vimos nos cursos anteriores, as distribuições de probabilidade tem valor esperado (média ponderada), desvio padrão e uma forma específica. 
+
+Vamos fazer um experimento consistindo de alguns passos. Primeiro, vamos selecionar inúmeras amostras de tamanho $n$ da população de gerentes. Segundo, vamos computar as médias amostrais (estimativas do parâmetro populacional) dessas amostras. Terceiro, vamos estudar a distribuição amostral resultante deste experimento. 
+
+```{r}
+set.seed(123) # travar o processo de seleção
+
+# Estabelecendo parâmetros para o expleriemento 
+tamanho_amostral <- 60 
+num_amostras <- 100
+
+# Inicializando um vetor vazio para preencher com médias amostrais
+medias_amostrais <- numeric(num_amostras)
+
+# Loop para obter amostras multiplas e calcular as médias amostrais 
+for(i in 1:num_amostras) {
+  amostra <- sample(EAI$Salary, 30)
+  media_amostra <- mean(amostra)
+  medias_amostrais[i] <- media_amostra
+}
+```
+
+Vamos ver o formato do histograma (dsitribuição) de $\bar x$: 
+```{r}
+# Histograma 
+hist(medias_amostrais, freq = F)
+
+# Curva Normal 
+x <- seq(min(medias_amostrais), max(medias_amostrais), length = 100)
+y <- dnorm(x, mean(medias_amostrais), sd(medias_amostrais))
+lines(x, y, col = "blue", lwd = 2)
+```
+
+Nota-se que o experimento, se repetido por um número suficiente de vezes gera uma distribuição aproximadamente normal. Isto vai ser um padrão para este tipo de experimento!! Existe um teorema matemático por trás deste fenômeno, mas não precisamos nos preocupar com ele agora -- ver teorema do limite central. 
+
+## Valor esperado de $\bar x$
+
+Como $\bar x$ pode assumir muitos valores diferentes, faz sentido pensar na média ou valor central destas médias amostrais. Para distribuições de probabilidade utilizamos o conceito de valor esperado $E$ para tratar dos valores centrais. Assumindo $E(\bar x)$ como o valor esperado de $\bar x$ e $\mu$ como a média da população amostrada, é possível mostrar que: 
+
+$$
+E(\bar x) = \mu
+$$
+Então, utilizando *amostragem aleatória simples* o valor esperado ou a média da distribuição amostral de $\bar x$ é igual a média do parâmetro populacional. Anteriormente vimos que a média dos salários na população era de $\mu = 51 800$. Portanto, $E(\bar x)= 51 800$ -- quando o valor esperado do estimador pontual é igual o parâmetro da população, dizemos que ele é não viesado.
+
+## Desvio Padrão de $\bar x$
+
+Considere a seguinte notação: $\sigma_{\bar x}$ como desvio padrão da distribuição de $\bar x$; $\sigma$ como o desvio padrão da variável de interesse na população; $n$ tamanho da amostra e $N$ como o tamanho da população. 
+
+Há duas maneiras de calcular o desvio padrão de $\bar x$. Para população finita e pequena (amostras representando mais 5\% dos indivíduos da população): 
+
+$$
+\sigma_{\bar x} = \sqrt{(\frac{N-n}{N-1})} \frac{\sigma}{\sqrt(n)}
+$$
+Para os demais casos, isto é, populações infinitas, ou suficientemente grandes, utiliza-se: 
+
+$$
+\sigma_{\bar x} = \frac{\sigma}{\sqrt(n)}
+$$
+
+
+Dado que utilizamos uma amostra de $n=30$ para uma população de $N=2500$, poderíamos usar a forma mais simples para calcular o desvio padrão. Porém, em geral, não temos informações sobre $\sigma$, isto é, o desvio padrão dos dados na população. Nesse caso usamos a estimativa com base nos dados amostrais. 
+
+$$
+s_{\bar x} = \frac{s_{sal}}{\sqrt(n)}
+$$
+
+```{r}
+# desvio padrão das médias amostrais (estimativa)
+s = sd(s1_n30$Salary)/sqrt(30-1)
+s
+```
+
+## Forma da Distribuição Amostral de $\bar x$
+
+O teorema do limite central mostra que independente do formato da distribuição original dos dados, a distribuição amostral vai ter uma distribuição aproximadamente normal, para $n$ suficientemente grande. 
+
+## Utilização prática das propriedades da distribuição amostral
+
+A razão prática de avançarmos nos conhecimentos sobre distribuições amostrais é que poderemos utilizar probabilidades para avaliar a diferença entre a média estimada e o parâmetro da população, utilizando apenas uma amostra!
+
+Considere que a gerência aceitaria uma estimativa da média populacional com uma margem de erro de $+- 500$. A pergunta que podemos responder é a seguinte: Qual a probabilidade de que a média amostral dos salários computada usando uma amostra aleatória simples vai estar no intervalo de \$500 da média populacional?
+
+Como identificamos as propriedades da distribuição amostral dos salários, poderemos responder essa pergunta de probabilidade mesmo tendo apenas uma amostra sob análise. 
+
+[desenhar distribuição dos salários, encontrar pontos +-500 da média populacional, e verificar a probabilidade de amostras que desviem nesse intervalo]
+
+[Vamos querer diminuir o erro padrão para ter estimativas mais "certeiras"].
+
+Note que o tamanho das amostras diminui o erro-padrão. 

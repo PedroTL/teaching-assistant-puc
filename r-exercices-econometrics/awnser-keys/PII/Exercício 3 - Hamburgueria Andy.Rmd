@@ -1,0 +1,134 @@
+---
+title: "Exercício Banco Andy"
+author: "João Pedro Toledo"
+date: "2023-08-28"
+output: html_document
+---
+
+Abrir o banco de dados direto do repositório do github (banco andy).
+
+```{r}
+#utilizar a função load, aninhada com a função url 
+load(url("https://github.com/ccolonescu/PoEdata/raw/master/data/andy.rda"))
+head(andy)
+```
+ O banco contém 75 observações sobre as franquias da hamburgueria Andy nos Estados Unidos. O banco contém 3 variáveis, sendo elas: 
+ 
+*sales* -- vendas mensais em 1000 doláres;
+
+*price* -- é um índice preços (preço médio) dos produtos vendidos em dólares;
+
+*advert* -- é o gasto com publicidade mensal em 1000 dólares;
+
+```{r}
+summary(andy) # sumário estatístico
+```
+
+1) Construa dois diagramas de dispersão considerando a variável *sales* em função das demais, separadamente. Interprete, apontando qual a relação entre as variáveis (covariância) que deve ser verificada nos modelos de regressão a serem estimados. 
+
+Construindo: <br>
+1- Diagrama de Dispersão de *sales* em função de *price*
+
+```{r}
+plot(andy$price, andy$sales, # Variavel X, Variavel Y
+     main = "1- Diagrama de Dispersão - sales VS price", # Titulo do Gráfico
+     xlab = "price", # Titulo do Eixo X
+     ylab = "sales", # Titulo do Eixo Y
+     pch = 19) # pch altera o tamanho dos pontos 
+cov(andy$price, andy$sales)
+```
+
+O Diagrama de Dispersão 1 apresenta uma relação negativa de *sales* em função de *price*. Isto indica que dado aumento no preço do hambúrguer temos uma queda nas vendas. A covariancia confirma uma relacao negativa.
+
+Construindo: <br>
+2- Diagrama de Dispersão de *sales* em função de *advert*
+
+```{r}
+plot(andy$advert, andy$sales, # Variavel X, Variavel Y
+     main = "2- Diagrama de Dispersão - sales VS advert", # Titulo do Gráfico
+     xlab = "advert", # Titulo do Eixo X
+     ylab = "sales", # Titulo do Eixo Y
+     pch = 19) # pch altera o tamanho dos pontos
+cov(andy$advert, andy$sales)
+```
+
+O Diagrama de Dispersão 2 por sua vez, mostra o impacto do aumento de propaganda nas vendas. Podemos ver que com maior gasto em propaganda temos maior numero de vendas. A covariancia confirma uma relacao positiva.
+
+2) Estime dois modelos de regressão linear simples para estudar os determinantes da variabilidade das vendas a patir das demais variáveis disponíveis. 
+
+Modelo 1 - $sales_i = \hat{\beta_1} + \hat{\beta_2}price_i + \hat{u_i}$
+
+```{r}
+mod1 <- lm(sales ~ price, data = andy)
+summary(mod1)
+```
+
+Modelo 2 - $sales_i = \hat{\beta_1} + \hat{\beta_2}advert_i + \hat{u_i}$
+
+```{r}
+mod2 <- lm(sales ~ advert, data = andy)
+summary(mod2)
+```
+
+3) Interprete os modelos estimados destacando o significado dos coeficientes de regressão e o que o valor estimado da variável dependente (equação da reta) representa. 
+
+Modelo 1 - $sales_i = \hat{\beta_1} + \hat{\beta_2}price_i + \hat{u_i}$
+
+Para o Modelo 1 temos o $\beta_1$ como intercepto, isto significa que caso o nosso $x$ seja 0, neste caso, sendo a variável independente *price* $\hat{\beta_2}price_i$, o valor onde nossa regressão se iniciaria seria 121.900. Portanto, com índice de preço médio dos produtos de 0, teríamos em média 121.900 vendas mensais em 1000 dólares (/$121900). Importante enfatizar que economicamente este resultado não faz sentido, uma vez que não temos preco de venda 0.
+
+Seguindo para a interpretação do $\hat{\beta_2}price_i$. Ele nos indica o *coeficiente angular* ou a inclinação da reta, sendo o impacto do aumento de uma unidade da variável independente *price* na variável dependente *sales*. Neste caso, quanto maior o valor estimado de *price* no modelo, mais inclinado será a linha de regressão, indicando que o aumento de uma unidade em *price* vai impactar de maneira forte *sales*. Para o Modelo 1 temos que o aumento de 1 unidade no índice de preço médio (\$1 dolar) vai impactar negativamente em média uma redução de 7.829 nas vendas mensais em 1000 dólares ($7829 dólares).
+
+Por fim, temos o termo de resíduos $u_i$. Os resíduos do modelo representam o modo como os dados observados se diferem dos dados da amostra. Isto pode ser explicado pela falta de varíaveis independentes no modelo.
+
+Modelo 1 - $sales_i = \hat{\beta_1} + \hat{\beta_2}advert_i + \hat{u_i}$
+
+Para o Modelo 2 temos o $\hat{\beta_1}$ como intercepto, isto significa que caso o nosso $x$ seja 0, neste caso sendo a variável independente *advert* $\hat{\beta_2}advert_i$ o valor onde nossa regressão se iniciaria seria 1,7326. Portanto, com um gasto em publicidade mensal em 1000 dólares de 0 teríamos em média 74,1797 vendas mensais em 1000 dólares. (/$74179)
+
+Seguindo para a interpretação do $\hat{\beta_2}advert_i$. Ele nos indica o *coeficiente angular* ou a inclinação da reta, sendo o impacto do aumento de uma unidade da variável independente *advert* na variável dependente *sales*. Neste caso, quanto maior o valor estimado de *advert* no modelo, mais inclinado será a linha de regressão, indicando que o aumento de uma unidade em *advert* vai impactar de maneira forte *sales*. Para o Modelo 2 temos que o aumento de 1 unidade no gasto em publicidade mensal em 1000 dólares ($1000) vai impactar positivamente em média um aumento de 1,7326 nas vendas mensais em 1000 dólares (\$1732).
+
+Por fim, temos o termo de resíduos $u_i$. Os resíduos do modelo representam o modo como os dados observados se diferem dos dados da amostra. Isto pode ser explicado pela falta de varíaveis independentes no modelo.
+
+4) Escreva a FRA e a FRA estocástica considerando os valores estimados para os coeficientes de regressão. 
+
+Modelo 1
+
+FRA
+
+$\hat{sales}_i = \hat{\beta_1} + \hat{\beta_2}price_i$
+
+$\hat{sales}_i = 121.900 - 7.829price_i$
+
+FRA estocástico
+
+$sales_i = \hat{\beta_1} + \hat{\beta_2}price_i + \hat{u_i}$
+
+$sales_i = \hat{sales}_i - \hat{u_i}$
+
+Modelo 2
+
+FRA
+
+$\hat{sales}_i = \hat{\beta_1} + \hat{\beta_2}advert_i$
+
+$\hat{sales}_i = 74.1797 + 1.7326advert_i$
+
+FRA estocástico
+
+$sales_i = \hat{\beta_1} + \hat{\beta_2}advert_i + \hat{u_i}$
+
+$sales_i = \hat{sales}_i - \hat{u_i}$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,4 @@
+Rubrica Cps4
+1. Interprete efeito educação sobre salário
+2. Interpreto efeito idade sobre salário
+3. São significantes? Oq significa?

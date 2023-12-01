@@ -1,0 +1,214 @@
+---
+title: "Untitled"
+author: "João Pedro"
+date: "2023-08-30"
+output: html_document
+---
+
+Uma pesquisa levantou que a média salarial de homens e mulheres pós-graduados, 10 anos após se formarem é de, respectivamente $168.000$ e $117.000$. Assuma que o desvio padrão para homens é de $40.000$ e para mulheres é de $25.000$.
+
+a) Qual a probabilidade de uma amostra feita por amostragem simples aleatória de 40 homens prover uma média amostral entre +- $10.000$ da média populacional de $168.000
+
+```{r}
+resposta_a <- 1-2 * pnorm(158000, 168000, (40000)/sqrt(40), lower.tail = TRUE)
+resposta_a
+```
+
+
+b) Qual a probabilidade de uma amostra feita por amostragem simples aleatória de 40 mulheres retornar uma média amostral de +- 10.000 da média populacional de $117.000?
+
+```{r}
+1-2 * pnorm(107000, 117000, (25000)/sqrt(40), lower.tail = TRUE)
+```
+
+
+c) Em qual dos casos anteriores, (a) ou (b) a probabilidade de obter uma média no intervalo de $10.000 dos valores populacionais é maior? Porque?
+
+Caso B, pois com um Desvio Padrão menor, temos uma distribuicao mais concentrada em torno da média, por consequência, aumenta a probabilidade do retorno da média amostral estar entre o limite determinado. 
+
+d) Qual a probabilidade de que uma amostra por amostragem simples aleatória de 100 homens vai retornar uma média amostral igual ou abaixo de $4.000 da média populacional?
+
+```{r}
+resposta_d <- pnorm(164000, 168000,(40000)/sqrt(100), lower.tail = T)
+resposta_d
+```
+
+### Resolvendo Teste - Amostragem
+
+1. Os dados a seguir são de uma amostra aleatória simples
+
+5 8 10 7 10 14
+
+Calcule:
+
+A estimativa pontual da média populacional | A estimativa pontual do desvio padrão.
+
+```{r}
+# Atribuindo os valores a variaveis
+dados <- c(5, 8, 10, 7, 10, 14) # Criando um vetor dos nossos dados e assinando ele a uma variavel
+media <- mean(dados) # Pegando a média
+desvio_padrão <- sd(dados) # Pegando desvio padrão
+
+# Vendo os dados no console
+media
+desvio_padrão
+```
+
+2. Uma questão de um estudo de uma amostra de 150 indivíduos gerou 75 respostas SIM, 55 respostas NÃO e 20 SEM OPINIÃO.
+
+Calcule:
+
+Estimativa pontual da proporção na população que respondeu SIM.
+
+Estimativa pontual da proporção na população que respondeu NÃO.
+
+```{r}
+amostra <- 150
+respostas_sim <- 75
+respostas_nao <- 55
+
+proporcao_resposta_sim <- (respostas_sim/amostra)*100
+proporcao_resposta_nao <- (respostas_nao/amostra)*100
+
+proporcao_resposta_sim
+proporcao_resposta_nao
+```
+
+3. Uma amostra de 50 empresas Fortune 500 mostrou que 5 são localizadas dentro de New York, 6 em California, 2 em Minnesota e 1 em Wisconsin.
+
+Calcule a estimativa de proporção para empresas localizadas:
+
+```{r}
+amostra <- 50
+empresas_em_newyork <- 5
+empresas_em_california <- 6
+empresas_em_minnesota <- 2
+empresas_em_wisconsin <- 1
+
+proporcao_new_york <- (empresas_em_newyork/amostra)*100
+proporcao_california <- (empresas_em_california/amostra)*100
+proporcao_minessota <- (empresas_em_minnesota/amostra)*100
+proporcao_fora4estados <- ((amostra - empresas_em_newyork - empresas_em_california - empresas_em_minnesota - empresas_em_wisconsin)/amostra)*100
+
+print(paste(proporcao_new_york, proporcao_california, proporcao_minessota, proporcao_fora4estados, sep = "|"))
+```
+
+Suponha que o desvio padrão da população seja $\sigma = 25$ Calcule a estimativa de erro padrão da média para tamanhos de amostra $n$ iguais a:
+
+50 | 100 | 150 | 200
+
+Onde:
+
+$$
+\sigma_{\bar x} = \frac{\sigma}{\sqrt(n)}
+$$
+
+$$
+\sigma_{\bar x} = s
+$$
+
+O que você pode afirmar sobre o tamanho da estimativa de erro padrão amostral da média quando o tamanho da amostra for aumentando?
+
+```{r}
+calcular_questao3 <- function(n) {
+  desvio_padrao_pop <- 25
+  
+  resultado <- desvio_padrao_pop/sqrt(n)
+  
+  resultado <- round(resultado, digits = 2)
+  
+  return(resultado)
+}
+
+sd_50 <- calcular_questao3(50)
+sd_100 <- calcular_questao3(100)
+sd_150 <- calcular_questao3(150)
+sd_200 <- calcular_questao3(200)
+
+print(paste(sd_50, sd_100, sd_150, sd_200, sep = "|"))
+```
+
+*A medida que a amostra aumenta a estimativa de erro padrão da distribuicao amostral diminui*
+
+5. O salário anual inicial médio de graduados com especialização em marketing nos estados unidos é US 34.000. Suponha que o o desvio padrão da população seja $\sigma = 2000$
+
+Qual a probabilidade de uma amostra aleatória simples de graduados com especialização em marketing ter uma média amostral dentro de +- US$ 250 da média populacional correspondente a cada um dos seguintes tamanhos de amostra:
+
+30 | 50 | 100 | 200 | 400
+
+Qual o impacto do tamanho da amostra nos resultados?
+
+```{r}
+probabilidade_30n <- 1-2 * pnorm(34250, 34000, (2000)/sqrt(30), lower.tail = TRUE)
+probabilidade_30n
+
+calcular_questao5 <- function(n) {
+  desvio_padrao_pop2 <- 2000
+  
+  resultado <- pnorm(34250, 34000, (desvio_padrao_pop2)/sqrt(n), lower.tail = T)
+  
+  resultado <- (resultado * 2) - 1
+  
+  resultado <- round(resultado, digits = 4)
+  
+  return(resultado)
+}
+probabilidade_30n <- calcular_questao5(30)
+probabilidade_50n <- calcular_questao5(50)
+probabilidade_100n <- calcular_questao5(100)
+probabilidade_200n <- calcular_questao5(200)
+probabilidade_400n <- calcular_questao5(400)
+
+print(paste(probabilidade_50n, probabilidade_100n, probabilidade_200n, probabilidade_400n, sep = "|"))
+```
+
+Maior amostra aumenta a confiabilidade da real média da populacao estar no intervalo.
+
+6. A média nacional para o exame SAT nos EUA é de $\mu = 1020$. Considere que o desvio padrão da populacao seja $\sigma = 100$ e a amostra $n = 75.$ 
+
+a) Calcule a probabilidade de uma amostra aleatória de $n = 75$  estudantes ter média amostral dentro de +-5 pontos da média populacional.
+
+b) O que se espera da porcentagem calculada em **a** caso o número da amostra de estudantes dobre?
+
+```{r}
+calcular_questao6 <- function(media, des_pad, n_amostra, valor_interesse) {
+  
+  resultado <- pnorm(valor_interesse, media, (des_pad)/sqrt(n_amostra))
+  
+  resultado <- (resultado * 2) - 1
+  
+  return(resultado)
+}
+
+probabilidade_sat <- calcular_questao6(media = 1020, des_pad = 100, n_amostra = 75, valor_interesse = 1025)
+probabilidade_sat
+1-2 * pnorm(1025, 1020, (100)/sqrt(150), lower.tail = TRUE)
+```
+
+Caso o numero da amostra de estudante dobre teremos um valor de 45,97%, sendo maior que o da questão **a**
+
+7. A distribuição amostral de $\bar x$ é a:
+
+Distribuicao de probabilidade da média amostral
+
+8. Qual das seguintes alternativas é um exemplo de amostragem não probabilistica?
+
+Amostragem por julgamento
+
+9. Uma amostra aleatória simples de 100 observações foi obtida a partir de uma grande população. A média e o desvio padrão amostrais são dados por 80 e 12, respectivamente. O erro padrão da média é.
+
+```{r}
+calcular_questa9 <- function(des_pad, media, n_amostra) {
+   
+  resultado <- des_pad/sqrt(n_amostra)
+  
+  return(resultado)
+}
+
+erro_padrao_media <- calcular_questa9(des_pad = 12, media = 80, n_amostra = 100)
+erro_padrao_media
+```
+
+10. Ao calcular o erro padrão da média, o fator de correção da população infinita é utilizado quando:
+
+A população é infinita ou a população é finita e o tamanho da amostra é menor ou igual a 5% do tamanho da população, ou seja N/n <= 0,05

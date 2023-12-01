@@ -1,0 +1,3 @@
+Rubrica Food
+1. Diagrama dispersão, gasto ~ renda.
+2. Modelo Linear, interpretar gasto ~ renda

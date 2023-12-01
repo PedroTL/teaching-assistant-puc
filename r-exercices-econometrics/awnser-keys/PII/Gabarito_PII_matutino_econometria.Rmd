@@ -1,0 +1,159 @@
+---
+title: "Gabarito PII - Matutino"
+author: "João Pedro T. T. Lucas"
+date: ''
+output: html_document
+---
+
+```{r}
+load(url("https://github.com/ccolonescu/PoEdata/raw/master/data/utown.rda"))
+```
+
+-   Banco de Dados com *1000* Observações
+-   *price* 
+      + House price, in \$1000
+-   *sqft* 
+      + Square feet of living area, in 100's
+-   *age* 
+      + House age, in year
+
+#  {.tabset}
+
+## Questão 1
+
+**A partir das variáveis no seu banco de dados, proponha um modelo de regressão simples, utilizando apenas variáveis numéricas contínuas. Escreva a equação do modelo a ser estimado (FRA estocástica).**
+
+
+------------------------------------------------------------------------
+
+Propondo o modelo com base nos dados: 
+
+$$
+price = \hat \beta_1 + \hat \beta_2 sqrft + \hat u_i \\
+$$
+onde, *price* é o preço de venda das residências, em 1000 dólares, e *sqft* é o tamanho das residências em 100 pés quadrados. $\hat \beta_1$ e $\hat \beta_2$ são, respectivamente, o intercepto e o coeficiente angular a serem estimados. Espera-se que o tamanho dos imóveis impacte positivamente nos preços. 
+
+
+------------------------------------------------------------------------
+
+#  {.tabset}
+
+## Questão 2
+
+**Obtenha as estimativas de MQO para a amostra fornecida e interprete os coeficientes estimados. Apresente e explique os estimadores de MQO, destacando o objetivo do cálculo em relação à função da soma dos quadrados dos resíduos.**
+
+------------------------------------------------------------------------
+
+**Estimadores de MQO**
+
+$$
+\hat \beta_1 = \bar Y - \beta_2 \bar X \\
+\hat \beta_2 = \frac{\sum x_i y_i}{\sum x_i ^2}
+$$
+
+Esses estimadores são obtidos a partir do problema de minimização da Soma dos Quadrados dos Resíduos (SQR). Matematicamente, a partir da FRA e do conceito de SQR, temos (ver aula de derivação de MQO): 
+
+$$
+\sum_i \hat u_i ^2 = \sum_i (Y_i - \hat \beta_1 + \hat \beta_2 X_i)^2
+$$
+
+Portanto, o problema a ser resolvido é encontrar o par de $\hat \beta_1$ e $\hat \beta_2$ capaz de minimizar $\sum_i \hat u_i ^2$. Ao derivar em relação à $\hat \beta_1$ e $\hat \beta_2$, igualando a zero (ponto de mínimo em uma função de segundo grau com concavidade voltada para cima), obtemos os estimadores de MQO.
+
+A principal razão para minimizar a *SQR* é encontrar o melhor ajuste para representar a relação linear  entre a variável dependente e independente. 
+
+
+**Estimando Modelo:** Relacionando o preço (*price*) como uma função do tamanho da residência (*sqft*).
+
+```{r}
+modelo_1 <- lm(price ~ sqft, utown) # estimando o modelo por MQO
+summary(modelo_1) # Obtendo os resultados das estimativas
+```
+
+------------------------------------------------------------------------
+
+Com $\hat \beta_1 = 30.9203$, temos o intercepto, ou o *valor* da propriedade caso *sqft* seja zero. Neste caso, o intercepto não teria sentido econômico, uma vez que não existiria uma casa com tamanho zero (*sqft*). Poderíamos considerar, no entanto, que este seria o valor apenas do terreno, sem construção adicional, em outras palavras, o valor (*price*) da propriedade que independem do tamanho da construção.
+
+Para $\hat \beta_2 = 8.59$, temos o coeficiente angular, indicando que o aumento de uma unidade de *sqft*, medida em 100 pés quadrados, levaria,  em média e tudo o mais constante, a um incremento de $8,5973$ mil dólares (*\$1000*) no preço (*price*) do imóvel. 
+
+------------------------------------------------------------------------
+
+#  {.tabset}
+
+## Questão 3
+
+**Identifique e interprete o erro-padrão das estimativas de MQO, o R2 e comente de maneira geral a significância estatística das estimativas.**
+
+------------------------------------------------------------------------
+
+**Erro padrão:**
+
+$$
+ep(\hat \beta_2) = \frac{\sigma}{\sqrt \sum x_i ^2} \\
+ep(\hat \beta_1) = \sqrt {\frac{\sum X_i^2}{n \sum x_i ^2}} \sigma
+$$
+
+
+```{r}
+summary(modelo_1)
+```
+
+O erro padrão é apenas o desvio padrão da distribuição amostral do estimador. Esta distribuição é simplesmente uma distribuição do conjunto de valores dos estimadores obtidos de todas as amostras possíveis, do mesmo tamanho, de uma dada população (conceito de amostras repetidas).
+
+As distribuições amostrais são usadas para fazer inferências sobre os valores dos parâmetros populacionais com base nos valores calculados dos estimadores baseados em uma ou mais amostras. Desta forma, é frequentemente usada como medida sintética de precisão das estimativas ( um desvio-padrão menor, significa que a dispersão entorno do real beta é também menor).
+
+Para $\hat \beta_1$, o erro-padrão é igual a $9.3370$, e para $\hat \beta_2$ é igual a $0.3679$. Esses valores seriam utilizados na estimativa por intervalos também. 
+
+O valor de $R^2$ assim definido, é conhecido como coeficiente de determinação (amostral) e é o indicador mais usado para medir a qualidade do ajustamento de uma linha de regressão.
+
+Em suma, o $R^2$ mede a proporção ou percentual da variação total de $Y$ explicada pelo modelo de regressão. Neste caso, a variação de *sqft* explica em **35,36%** a variação percentual de *price*. Das aulas e da bibliografia básica $r^2 = SQT/SQR$.
+
+Ambos os coeficientes estimados, $\hat \beta_1$ e $\hat \beta_2$, são estatisticamente significativos, evidenciados por seus *p-values* inferiores a 0.05 (mais estrelinhas). A significância estatística é determinada quando rejeitamos a hipótese nula com base nos testes de hipóteses formulados, geralmente utilizando um intervalo de confiança para as estimativas. 
+
+------------------------------------------------------------------------
+
+#  {.tabset}
+
+## Questão 4
+
+**Nas aulas e na literatura básica do curso (Gujarati) foram discutidos um conjunto de hipóteses e um teorema matemático. Comente, brevemente, as hipóteses e a importância desse teorema**
+
+------------------------------------------------------------------------
+
+Estas hipóteses são o que caracterizam o **Modelo Clássico de Regressão Linear**:
+
+1. O modelo de regressão é linear nos parâmetros, embora possa não ser nas variáveis;
+2. Os valores assumidos pelo regressor são fixos ou independentes do termo de erro $cov (X_i, u_i) = 0$;
+3. O valor médio do termo de erro $u_i$ é zero $E(u_i | X_i) = 0$. Os valores positivos de $u_i$ cancelam os negativos, de modo que seu efeito médio sobre $Y$ é igual a 0;
+4. Homoscedasticidade ou variância constante de $u_i$. A variância do termo de erro é a mesma independente do valor de $X$;
+5. Não há autocorrelação entre os termos de erro $cov(u_i, u_j | X_i e X_j) = 0$, sendo a hipótese de ausência de correlação serial ou ausência de autocorrelação. Isso significa que, dado $X_i$, os desvios de quaisquer dois valores de $Y$ em relação a sua média não apresenta padrões;
+6. O número de observações $n$ deve ser maior que o número de parâmetros a serem estimados: como alternativa, o número de observações $n$ deve ser maior que o número de variáveis independentes;
+7. Variabilidade dos valores $X$: os valores de $X$ em uma amostra não devem ser os mesmos.
+
+O **Teorema de Gauss-Markov** indica que dadas as premissas do modelo clássico de regressão linear, os estimadores de mínimos quadrados da classe dos estimadores lineares não enviesados têm variância mínima, isto é, são o melhor estimador linear não enviesado (MELNT).
+
+------------------------------------------------------------------------
+
+#  {.tabset}
+
+## Questão 5
+
+**Mediante um diagrama de dispersão, comente se sua amostra gera um modelo que aparenta ou não ter homoscedasticidade dos resíduos. Comente, também, se o modelo estimado é um modelo de X fixo ou aleatório. Explique.**
+
+------------------------------------------------------------------------
+
+```{r}
+plot(x = utown$sqft,
+     y = utown$price,
+     main = "Diagrama de Dispersão de Price em função de Sqft",
+     xlab = "sqft, in 100's",
+     ylab = "price in $1000") +
+  abline(lm(utown$price ~ utown$sqft),
+         col = "red",
+         lwd = 3)
+```
+
+Podemos assumir homoscedasticidade quando o termo de tem erro tem variância constante para todo valor de $X_i$. Neste modelo, aparentemente, pelo diagrama de dispersão, podemos atestar homoscedasticidade pelos pontos distribuidos de maneira uniforme ao redor da linha de regressão.
+
+Pelo diagrama, também, observa-se que não existem muitos valores repitidos para os valores de $X$ na amostra (pontos empilhados). Portanto, assumimos que o modelo é um modelo de $X$ aleatório, e precisamos considerar, por hipótese, que $cov(X_i, u_i) = 0$ para que tenhamos um Modelo Clássico de Regressão Linear. Em outras palavras, a validade do Teorema de Gauss-Markov, e portanto da eficiência de MQO, depende da validade desta hipótese. 
+
+------------------------------------------------------------------------

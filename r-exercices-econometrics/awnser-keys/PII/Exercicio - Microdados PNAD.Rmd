@@ -1,0 +1,110 @@
+---
+title: "Untitled"
+author: "João Pedro"
+date: "2023-09-18"
+output: html_document
+---
+### 1. MICRODADOS DA PNAD CONTÍNUA TRIMESTRAL
+
+#### 1.1 Endereço do repositório dos microdados: https://ftp.ibge.gov.br/
+
+### 2. Instalacao dos Pacotes e Configuracoes Adicionais
+
+```{r}
+options(encoding="latin1") # Encoding Leitura de Texto 
+options(scipen=999) # Numeros sem notacao cientifica
+
+# Verificando se pacotes estão instalados, caso não estejam instalar e abrir
+pacman::p_load(PNADcIBGE, haven, convey, dplyr)
+```
+
+### 3. Pegando Microdados PNAD
+
+Primeiro Adicionamos a uma variavel um `vetor` com as varíaveis desejadas, a funcao `get_pnad` por padrão devolve **todas** as varíaveis, por isso é necessário especificar quais vamos trabalhar. 
+
+Para mais informacoes: https://www.rdocumentation.org/packages/PNADcIBGE/versions/0.7.3
+
+VD4019 – Rendimento habitualmente recebido em todos os trabalhos para pessoas de 14 anos ou  mais de idade (apenas para pessoas que recebiam em dinheiro, produtos ou mercadorias em  qualquer trabalho)
+
+```{r}
+# Definir Variaveis
+variaveis <- c("UF", "Capital", "V2007", "V2009", "V2010", "VD3004", "VD4019", "VD4031", "V2001", "V1022","VD4001","VD4002", "VD3005", "VD4002", "VD4008", "VD4016", "VD4017", "V4010", "V4013", "VD4031", "VD4032", "VD4035", "VD4036", "VD4037")
+
+# Definindo Funcao de Busca Microdados
+microdados_pnad <- function(ano, trimestre, variaveis) {
+  require("PNADcIBGE")
+  
+  microdados <- get_pnadc(year = ano,
+                          quarter = trimestre,
+                          vars = variaveis,
+                          labels = TRUE,
+                          deflator = TRUE,
+                          design = TRUE)
+  return(microdados)
+}
+
+# Todos os Trimestres de 2021
+p1_21 <- microdados_pnad(ano = 2021, trimestre = 1, variaveis = variaveis)
+p2_21 <- microdados_pnad(ano = 2021, trimestre = 2, variaveis = variaveis)
+p3_21 <- microdados_pnad(ano = 2021, trimestre = 3, variaveis = variaveis)
+p4_21 <- microdados_pnad(ano = 2021, trimestre = 4, variaveis = variaveis)
+
+# Todos os Trimestres de 2022
+p1_22 <- microdados_pnad(ano = 2022, trimestre = 1, variaveis = variaveis)
+p2_22 <- microdados_pnad(ano = 2022, trimestre = 2, variaveis = variaveis)
+p3_22 <- microdados_pnad(ano = 2022, trimestre = 3, variaveis = variaveis)
+p4_22 <- microdados_pnad(ano = 2022, trimestre = 4, variaveis = variaveis)
+
+# Todos os Trimestres de 2023
+p1_23 <- microdados_pnad(ano = 2023, trimestre = 1, variaveis = variaveis)
+p2_23 <- microdados_pnad(ano = 2023, trimestre = 2, variaveis = variaveis)
+```
+
+Os dados são do tipo survey, para utilizar em analises amostrais mais complexas
+
+Aplicando Deflator
+
+```{r}
+microdados_deflator <- function(lista, novo_nome_variavel, var1, var2) {
+  require("PNADcIBGE")
+  
+  df <- lista[["variables"]]
+  
+  df[[novo_nome_variavel]] <- df[[var1]] * df[[var2]]
+  
+  lista[["variables"]] <- df
+  
+  return(lista)
+}
+
+p1_22 <- microdados_deflator(p1_22, "rend_habit_receb_todos_trab_1_22", "VD4019", "Habitual")
+p2_22 <- microdados_deflator(p2_22, "rend_habit_receb_todos_trab_1_22", "VD4019", "Habitual")
+p3_22 <- microdados_deflator(p3_22, "rend_habit_receb_todos_trab_1_22", "VD4019", "Habitual")
+p4_22 <- microdados_deflator(p4_22, "rend_habit_receb_todos_trab_1_22", "VD4019", "Habitual")
+
+p1_23 <- microdados_deflator(p1_23, "rend_habit_receb_todos_trab_1_22", "VD4019", "Habitual")
+p2_23 <- microdados_deflator(p2_23, "rend_habit_receb_todos_trab_1_22", "VD4019", "Habitual")
+```
+
+Modelo de Regressão
+
+```{r}
+
+modelo_linear <- function(lista, dependente, independente) {
+  require("survey")
+  
+  modelo <- svyglm(log(independente) ~ dependente, design = lista)
+  
+  return(modelo)
+}
+
+modelo_linear(p1_22, "VD4019", "VD3005")
+
+
+eq_rend_1_22 = svyglm(log(VD4019)~VD3005, design = p1_21)
+summary(eq_rend_1_22)
+
+eq_rend_2_22 = svyglm(log(VD4019)~V2007+V2010+V2009*V2009+VD3005, design=p2_21)
+summary(eq_rend_2_22)
+```
+

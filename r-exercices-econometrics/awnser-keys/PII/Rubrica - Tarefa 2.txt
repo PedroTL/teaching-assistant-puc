@@ -1,0 +1,23 @@
+Rubrica Tarefa 2
+
+1- Estimar e interpretar o modelo de gastos com alimentação em função da renda corretamente. (10) 
+
+(4.0) - Estimou o Modelo Corretamente
+(6.0) - Interpretou o Modelo Corretamente
+
+1- Estimar e interpretar o modelo de gastos com alimentação em função da renda corretamente. (10) 
+
+(4.0) - Estimou o Modelo Corretamente
+(1.0) - Interpretou o Modelo Incorretamente
+
+1- Estimar e interpretar o modelo de gastos com alimentação em função da renda corretamente. (10) 
+
+(0) - Estimou o Modelo Incorretamente
+(3.0) - Interpretou o Modelo Corretamente
+
+1- Estimar e interpretar o modelo de gastos com alimentação em função da renda corretamente. (10) 
+
+(0) - Estimou o Modelo Incorretamente
+(0) - Interpretou o Modelo Corretamente
+
+

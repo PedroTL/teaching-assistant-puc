@@ -1,0 +1,83 @@
+---
+title: 'Rotina: Tarefa 4'
+output: html_document
+date: "2023-09-01"
+---
+
+# Tarefa 2: Exercícios
+
+Nesta atividade vamos reproduzir três exemplos do livro Econometria Básica (GUJARATI, 1978), estimando e interpretando os modelos:
+
+## Exemplo 3.1. RELAÇÃO ENTRE CONSUMO E RENDA NOS ESTADOS UNIDOS, 1982-1996
+
+O primeiro exemplo utiliza dados de consumo e renda nos Estados Unidos.
+
+PCE.Y = despesas de consumo pessoal (DCP, na tabela em inglês está PCE)
+
+GDP.X = produto interno bruto (PIB, na tabela GDP), medidos em US\$ bilhões de 1992.
+
+### Abrindo o banco do exemplo 3.1
+
+```{r}
+load(url("https://github.com/brunoruas2/gujarati/raw/master/data/TableI_1.rda"))
+TableI_1$PCE.Y. <- as.numeric(as.character(TableI_1$PCE.Y.))
+TableI_1$GDP.X. <- as.numeric(as.character(TableI_1$GDP.X.))
+
+head(TableI_1)
+```
+
+A função do modelo a ser estimado, utilizando o mesmo nome para as variáveis da tabela acima, é a seguinte:
+
+$$ \hat{PCE.Y} = \hat{\beta_0} + GDP.X\hat{\beta_2} + \hat{\varepsilon} $$
+
+A equação acima é a função consumo agregado (isto é, para a economia como um todo) keynesiana.
+
+### Estimando o modelo
+
+### Interpretação do modelo
+
+## Exemplo 3.2. DESPESAS COM ALIMENTAÇÃO NA ÍNDIA
+
+Nos dados deste exemplo encontramos informações relativas a uma amostra de 55 domicílios rurais da Índia, aqui, o regressando é a despesa com alimentos e o regressor, a despesa total, uma *proxy* para a renda, ambas em rúpias
+
+### Abrindo o banco do exemplo 3.2
+
+```{r}
+load(url("https://github.com/brunoruas2/gujarati/raw/master/data/Table2_8.rda"))
+Table2_8$FOODEXP <- as.numeric(as.character(Table2_8$FOODEXP))
+Table2_8$TOTALEXP <- as.numeric(as.character(Table2_8$TOTALEXP))
+
+head(Table2_8)
+```
+
+A função do modelo a ser estimado, utilizando o mesmo nome para as variáveis da tabela acima, é a seguinte:
+
+$$
+\hat{FOODEXP} = \hat{\beta_0} + TOTALEXP\hat{\beta_2} + \hat{\varepsilon}
+$$
+
+### Estimando o modelo
+
+### Interpretação do modelo
+
+## Exemplo 3.3. RELAÇÃO ENTRE SALÁRIOS E NÍVEL DE ESCOLARIDADE
+
+A tabela a seguir mostra os dados relativos aos salários-hora médios e ao nível de escolaridade, medido em anos de estudo. Com base nesses dados, faremos uma regressão dos salários médios (Y) contra o nível de escolaridade (X).
+
+### Abrindo o banco do exemplo 3.3
+
+```{r}
+load(url("https://github.com/brunoruas2/gujarati/raw/master/data/Table2_6.rda"))
+Table2_6$Anos.de.estudo<- as.numeric(as.character(Table2_6$Anos.de.estudo))
+Table2_6$Salário.médio <- as.numeric(as.character(Table2_6$Salário.médio))
+
+head(Table2_6)
+```
+
+A função do modelo a ser estimado, utilizando o mesmo nome para as variáveis da tabela acima, é a seguinte:
+
+$$ \hat{Salário.médio} = \hat{\beta_0} + Anos.de.estudo\hat{\beta_2} + \hat{\varepsilon} $$
+
+### Estimando o modelo
+
+### Interpretação do modelo

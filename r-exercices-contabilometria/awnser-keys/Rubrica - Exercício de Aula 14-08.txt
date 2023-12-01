@@ -1,0 +1,13 @@
+Rubrica Atividade de Aula 14/08
+
+1) (5)
+Fez tabela completa 
+Media X
+Media Y
+Covariancia
+DP X
+DP Y
+Correlacao
+
+2) (5)
+Fez diagrama e iterpretou 

@@ -1,0 +1,77 @@
+---
+title: "Untitled"
+author: "João Pedro"
+date: "2023-09-18"
+output: html_document
+---
+### PNAD Contínua Trimestral pelo SIDRA R
+
+### 1. Instalacao dos Pacotes
+
+```{r}
+pacman::p_load(sidrar, dplyr)
+```
+
+### 2. Acessando e fazendo download dos dados
+
+É necessário em primeiro lugar pesquisar os dados da PNAD no SIDRA
+
+https://sidra.ibge.gov.br/home/pnadct/brasil
+
+Aqui estamos usando a `PNADC/T`, que é publicacao trimestral.
+
+Cada tabela disponível contem `Número` `Nome` `Período` `Território`
+
+Durante a construcao do modelo é importante selecionar variaveis que possuem `Período` e `Território` iguais, permitindo a melhor construcao do modelo de regressão.
+
+### 2.1 Extraindo Dados da PNAD no SIDRA
+
+Após realizar a pesquisa no SIDRA é necessário escolher:
+
+- Tabela que vamos trabalhar
+- Selecionar a Varíavel
+- Selecionar o Período
+- Selecionar Unidade Territórial
+
+No Código acima fazemos as seguintes transformacoes:
+
+- Escolhemos a tabela `6469` no site do SIDRA
+- Selecionamos a váriavel `Variação percentual em relação ao trimestre anterior - Rendimento médio mensal real das pessoas de 14 anos ou mais de idade ocupadas na semana de referência com rendimento de trabalho, efetivamente recebido em todos os trabalhos (% [2º trimestre 2012 a 2º trimestre 2023])`
+- Selecionamos o período `1 Trimestre 2012` até `2 Trimestre 2023`
+- Selecionamos `Brasil` como unidade territórial
+
+A funcao `get_sidra` toma diversos argumentos. Aqui estamos utilizando apenas o `api`.
+- `api` é o link para acesso a tabela, após a selecao da `váriavel` `período` e `Terrítorio`.
+
+Continuamos com a realizacao das transformacoes, primeiro criamos uma coluna de `data` que transforma a coluna original `Trimestre (Código)` em um formato de data `as.Date`.
+
+Por fim, selecionamos apenas as duas colunas de interesse `data` `var_perc_trim_ant_rendimento_medio_mensal_14a_ou_mais_ocupados` renomeada da variável original `Valor`.
+
+```{r}
+t_6469 <- get_sidra(api = '/t/6469/n1/all/v/9162/p/all/d/v9162%201') |>
+  dplyr::mutate(data = as.Date(paste0(`Trimestre (Código)`, "01"), format = '%Y%m%d')) |>
+  dplyr::select(data, var_perc_trim_ant_rendimento_medio_mensal_14a_ou_mais_ocupados = Valor) |>
+  as_tibble()
+```
+
+Para a tabela `6468` seguimos a mesma lógica.
+
+- Escolhemos a tabela `6468` no site do SIDRA
+- Selecionamos a váriavel `Variação em relação ao trimestre anterior - Taxa de desocupação, na semana de referência, das pessoas de 14 anos ou mais de idade (Ponto percentual [2º trimestre 2012 a 2º trimestre 2023])`
+- Selecionamos o período `1 Trimestre 2012` até `2 Trimestre 2023`
+- Selecionamos `Brasil` como unidade territórial
+
+```{r}
+t_6468 <- get_sidra(api = '/t/6468/n1/all/v/9402/p/all/d/v9402%201') |>
+  dplyr::mutate(data = as.Date(paste0(`Trimestre (Código)`, "01"), format = '%Y%m%d')) |>
+  dplyr::select(data, var_perc_trim_ant_tx_desocupacao_14a_ou_mais = Valor) |>
+  as_tibble()
+```
+
+Por fim, unimos em uma tabela final `t_final` as duas variáveis
+
+```{r}
+t_final <- left_join(t_6469, t_6468, by = "data")
+```
+
+

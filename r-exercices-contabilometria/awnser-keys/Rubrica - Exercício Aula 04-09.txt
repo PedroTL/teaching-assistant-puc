@@ -1,0 +1,19 @@
+Rubrica Atividade aula 04/09
+
+ex 18 (3.0)
+a) n = 100
+b) dp = 5
+c) desenho da distribuicao
+d) Dist. normal mostra que ocorrencia de medias amostrais proximas da real média da pop. sao mais freq.
+
+ex 21 (3.0)
+a) 0.68 (pnorm)
+b) 0.95 (pnorm
+
+ex 25 (2.0)
+a) 0.65
+b) 0.65
+c) 0.68
+
+ex 26 (3.0)
+a) 0.95

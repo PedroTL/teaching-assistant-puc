@@ -1,0 +1,7 @@
+Rubrica 6/11
+
+(2.5) 1. Propor um modelo de regressão múltipla (usando variáveis contínuas e categóricas), destacando: qual é variável dependente, quais são as variáveis independentes, e quais as relações entre as variáveis que esperam encontrar ao estimar o modelo.
+(2.5) 2. Faça uma descrição estatística das variáveis escolhidas para o modelo (usar função summary( ) no R
+(2.5) 3. Estimar o modelo por mínimos quadrados ordinários (usando a função lm( ) ). 3a) interpretar os coeficientes estimados (efeitos de X sobre Y) 3b.) Interpretar e explicar os resultados do ponto de vista da significância estatística.
+(2.5) 4. Explicar R2 
+

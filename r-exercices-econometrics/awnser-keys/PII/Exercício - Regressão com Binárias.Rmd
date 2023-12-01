@@ -1,0 +1,55 @@
+---
+title: "Untitled"
+author: "João Pedro"
+date: "2023-09-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+pacman::p_load(PNADcIBGE, dplyr, survey)
+```
+
+```{r, message = FALSE, warning = FALSE}
+# Nao presente 2017 - VD3001
+variaveis_selecionadas <- c("UF", 
+                            "V2007", # Sexo (1 = Homem, 2 = Mulher)
+                            "V2009", # Idade do Morador na data de referencia
+                            "V2010", # Cor/Raca (1 = Branca, 2 = Preta, 3 = Amarela, 4 = Parda, 5 = Indigena, 9 = Ignorado)
+                            "V3008", # Frequentou escola? (1 = Sim, 2 = Não) 
+                            "V3007", # Já Concluiu alguma graduacao (1 = Sim, 2 = Não)
+                            "VD3004", # Nível de instrucao mais elevado da pessoa (1 = Sem instrucao, 2 = Fundamental Inc., 3 = Fundamental Comp., 4 = Médio Inc., 5 = Médio Com., 6 = Superior Inc., 7 = Superior Com.) 
+                            "VD4001", # Condicao em relacao a forca de trabalho na semana de referencia pessoa 14a ou + (1 = Pessoa ocupada, 2 = Pessoa desocupada)
+                            "VD4002", # Condicao de ocupacao na semana referencia para pessoas de 14a ou + (1 = Pess. Ocupada, 2 = Pess. Desocupada)
+                            "VD4020", # Rendimento mensal efetivo de todos os trabalhos para pessoas de 14a ou +
+                            "VD4035"  # Horas efetivamente trabalhadas na semana de referencia em todos os trabalhos para pessoas 14a ou mais
+                            )
+```
+
+
+```{r, warning = FALSE, message = FALSE}
+dadosPNADc <- get_pnadc(year = 2017, # Ano
+                        quarter = 3, # Trimestre
+                        vars = variaveis_selecionadas, # Vetor de variaveis, caso não fornecido retorna todas disponiveis
+                        design = TRUE, # Caso TRUE microdados retornam como svyrep.design, caso FALSE, retorna apenas banco de dados
+                        labels = TRUE, # Caso TRUE varíaveis categoricas vão estar como FATOR, com descricao correspondente no dicionario
+                        deflator = FALSE # Se TRUE variavel deflatora vai estar disponivel para uso nos microdados
+                        )
+```
+
+Regressão Linear
+
+```{r, warning = FALSE}
+modeloLin_1 <- svyglm(VD4020 ~ V2009 + V2010, dadosPNADc)
+summary(modeloLin_1)
+```
+
+```{r}
+modeloLin_2 <- svyglm(VD4020 ~ V2009 + V3008, dadosPNADc)
+summary(modeloLin_2)
+```
+
+```{r, warninig = FALSE, message = FALSE, results = "hide", include = FALSE, eval = FALSE}
+modeloLog <- svyglm(V3007 ~ V2007 + V2010 + V2009, dadosPNADc, family = "quasibinomial")
+summary(modeloLog)
+```
+

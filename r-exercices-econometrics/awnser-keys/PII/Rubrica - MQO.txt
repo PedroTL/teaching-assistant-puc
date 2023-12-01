@@ -1,0 +1,5 @@
+Rubrica MQO1
+1) Obter as estimativas de MQO para os modelos (sales em função de price e sales em função de advert)
+2) Escrever a equação da reta (FRA não estocástica, com os valores estimados) para os dois modelos
+3) Interpretar as estimativas
+4) Calcular a SQR e explicar o que esse valor significa

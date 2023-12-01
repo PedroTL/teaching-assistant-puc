@@ -1,0 +1,111 @@
+---
+title: ""
+author: "João Pedro"
+date: "2023-11-23"
+output: html_document
+---
+
+A AARP divulgou um estudo conduzido para saber mais sobre quanto tempo demora para que os indivíduos preparem suas declarações de imposto de renda para o recebimento da devolução (AARP Bulletin, abril de 2008). Os dados contidos no arquivo denominado TaxReturn.xlsx são consistentes com os resultados do estudo. Esses dados informam o tempo, em horas, que 40 indivíduos levaram para concluir suas declarações de IR. Utilizando dados históricos, o desvio padrão populacional pode ser conhecido com s=9 horas. Qual é a estimativa intervalar com 95% de confiança para o tempo médio que um indivíduo demora a completar a declaração de imposto de renda?
+
+```{r}
+s <- 9
+n <- 40
+z <- qnorm(0.975)
+```
+
+$\mu_{0.95} = \bar{X} \pm Z \frac{\sigma}{\sqrt{n}}$
+
+$\bar X = \sum \frac{X}{n}$
+
+```{r}
+X_bar <- 33.5 # mean(TaxReturn)
+sd_populacao <- 11 #sd(TaxReturn)
+```
+
+```{r}
+intervalo_1 <- X_bar + z * (sd_populacao/sqrt(n))
+intervalo_2 <- X_bar - z * (sd_populacao/sqrt(n))
+intervalo_1
+intervalo_2
+```
+
+2. De acordo com estatísticas relatadas no CNBC, um número surpreendente de veículos a motor não tem cobertura de seguros (CNBC, 23 de fevereiro de 2006). Resultados amostrais, consistentes com o relatório do CNBC, mostram que 46 dos 200 veículos não tinham cobertura de seguros.
+
+```{r}
+veiculos_n <- 46
+veiculos_t <- 200
+```
+
+a. Qual é a estimativa pontual da proporção de veículos que não têm cobertura de seguros?
+
+```{r}
+estimativa_p <- veiculos_n / veiculos_t
+estimativa_p   
+```
+
+b. Desenvolva um intervalo de confiança de 95% para proporção populacional.
+
+```{r}
+z <- qnorm(0.975) 
+
+ep <- z * sqrt((estimativa_p * (1 - estimativa_p)) / veiculos_t)
+
+intervalo_1 <- estimativa_p - ep
+intervalo_2 <- estimativa_p + ep
+
+intervalo_1
+intervalo_2
+```
+
+3. O custo médio por noite de estadia em um quarto de hotel na cidade de Nova York é de \$273 (SmartMoney, marco de 2009). Considere que essa estimativa tem como base uma amostra de 45 hotéis e que o desvio padrão amostral é de \$65.
+
+a. Com 95 de confiança, qual é a margem de erro?
+
+```{r}
+s <- 65 
+n <- 45
+z <- qnorm(0.975)
+```
+
+```{r}
+me <- z * (s / (sqrt(n)))
+me
+```
+
+b. Qual é a estimativa intervalar com 95% de confiança para a média populacional?
+
+```{r}
+x_bar <- 273
+
+intervalo_1 <- x_bar - me
+intervalo_2 <- x_bar + me
+
+intervalo_1
+intervalo_2
+```
+
+c. Há dois anos, o custo médio de um quarto de hotel em Nova York era de \$229. Discuta a alteração nesse custo ao longo desses dois anos.
+
+Considerando o intervalo mencionado na questão b houve mudança significativa no custo médio do quarto de hotel em NY
+
+4. O consumo de bebidas alcoólicas por mulheres jovens maiores de idade vem aumentando no Reino Unido, nos Estados Unidos e na Europa (The Wall Street Journal, 15 de fevereiro de 2006). Dados (consumo anual em litros) consistentes com as descobertas relatadas no artigo do The Wall Street Journal e disponíveis no banco de dados Alcohol.xlsx são explicitados para uma amostra de 20 mulheres jovens europeias. Considerando que a população é aproximadamente simétrica, construa um intervalo de confiança de 95% para o consumo médio anual de bebidas alcoólicas por mulheres jovens europeias.
+
+```{r}
+x_bar <- 130
+n <- 20
+sigma <- 65.3911 # sd Alcohol.xlsx
+```
+
+```{r}
+df <- n-1
+t <- qt(0.975, df = df)
+ep <- sigma / sqrt(n)
+```
+
+```{r}
+intervalo_1 <- x_bar - t * ep
+intervalo_2 <- x_bar + t * ep
+intervalo_1
+intervalo_2
+```
+
