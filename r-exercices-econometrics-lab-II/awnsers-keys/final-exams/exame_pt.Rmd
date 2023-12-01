@@ -1,0 +1,160 @@
+---
+title: ""
+author: ""
+date: ""
+output: html_document
+---
+
+```{r, include = FALSE}
+library(tseries)
+library(dynlm)
+library(urca) 
+library(lmtest) 
+library(sandwich)
+library(stats)
+```
+
+```{r, include=FALSE}
+df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+head(df) # Visualizando estrutura
+```
+
+```{r, include = FALSE}
+df <- subset(df, country == "PT") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+```{r, echo = FALSE}
+head(df)
+```
+
+```{r, include=FALSE}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+```{r, include=FALSE}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r, include=FALSE}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r, include=FALSE}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+### Modelo 1 - Koyck
+
+1. Resultados da estimativa (summary)
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+summary(mod_koyck)
+```
+
+2. Estacionariedade Teste de raiz unitaria das variaveis em taxa (Trimestre contra Trimestre)
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+```
+
+3) Correlação Serial
+
+a) Correlograma
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+coeftest(mod_koyck, vcov=NeweyWest(mod_koyck))
+```
+
+b) Teste Breusch Godfrey (bgtest)
+
+```{r}
+bgtest(mod_koyck)
+```
+
+c) Cointegração
+
+```{r}
+po.test(as.matrix(mod_koyck$model))
+```
+
+```{r}
+coint <- ur.df(resid(mod_koyck), type = "none")
+summary(coint)
+```
+
+### Modelo 2 - Log Log
+
+5. Resultados da estimativa (summary)
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+summary(mod_log)
+```
+
+6. Estacionariedade Teste de raiz unitaria das variaveis em taxa (Trimestre contra Trimestre)
+
+```{r}
+urca_log_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "trend")
+urca_log_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "trend")
+```
+
+```{r}
+summary(urca_log_des_cons_r_decomp.ts)
+summary(urca_log_des_pib_r_decomp.ts)
+```
+
+7) Correlação Serial
+
+a) Correlograma
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+coeftest(mod_log, vcov=NeweyWest(mod_log))
+```
+
+
+b) Teste Breusch Godfrey (bgtest)
+
+```{r}
+bgtest(mod_log)
+```
+
+c) Cointegração
+
+```{r}
+po.test(as.matrix(mod_log$model))
+```
+
+```{r}
+coint <- ur.df(resid(mod_log), type = "none")
+summary(coint)
+```
+
+### Modelo 3 - Log-Lin
+
+```{r}
+pib_agg <- aggregate(df.ts[, "pib_r"])
+prod2000_2020 <- window((pib_agg), 2008, 2022)
+mod_txcresc <- lm(log(prod2000_2020) ~ I(2008:2022))
+summary(mod_txcresc) 
+```
+

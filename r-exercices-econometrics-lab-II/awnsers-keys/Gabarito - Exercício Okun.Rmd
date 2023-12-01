@@ -1,0 +1,324 @@
+---
+title: "Untitled"
+author: "João Pedro"
+date: "2023-06-05"
+output: html_document
+---
+
+1. No IPEA data coletar  e descrever as variáveis, salvando os dados em  um único banco de dados em .csv . Lista de variáveis:
+
+    - Produto interno bruto (PIB) a preços básico, série já trimestral, portanto sem necessidade de transformação. 
+    - Taxa de desocupação das pessoas de 14 anos ou mais de idade, na semana de referência, transformar de freqüência mensal para trimestral utilizando o método de mudança de freqüência de Média.
+    - Índice nacional de preços ao consumidor amplo (IPCA) geral: índice (dez. 1993 = 100),  converter para trimestral, por método, fim de período. Trabalhar para  fazer com que a série represente 1T 2023 = 100.
+
+2. Abrir o banco no R e realizar deflação da série temporal do Produto Interno Bruno (PIB) nominal  utilizando o IPCA. 
+
+3. Converter o banco para um objeto ts. Utilizar como padrão o início do período da observação da variável mais antiga. 
+
+4. Obter a decomposição das séries, e a partir dos gráficos  comentar as tendências gerais no período utilizado para PIB_real e Taxa de Desocupação. 
+
+5. Para série Produto Interno Bruto (PIB) real ,  calcular a taxa de crescimento percentual trimestre contra trimestre. 
+
+6. Reproduzir a lei de Okun para o caso Brasileiro com o modelo de defasagem distribuídas (utilizar defasagens finitas e infinitas), utilizando as séries PIB real e taxa de desocupação ambas dessazonalizadas. (g_des) e (u_des).
+
+    - Testar se as séries são estacionárias com o teste de raiz unitária (vamos trabalhar em sala). Lembrar que esses modelos pressupõe a utilização de séries estacionárias para "fugir" do problema da correlação espúria.
+    - Estimar o modelo pelo método ad hoc (defasagens finitas). Interpretar!
+    - Estimar o modelo pelo método da transformação de Koyck ( defasagens infinitas). Interpretar!
+    - No modelo de defasagem infinita de koyck, testar se existe auto-correlação dos resíduos. Caso exista, indicar e realizar o procedimento necessário para correção dos erros padrão das estimativas e, portanto, interpretação dos testes de significância t e F.
+
+7. Fazer a previsão para o ano de 2023 da série da taxa de desocupação dessazonalizada, utilizando o método Holt Winters. 
+
+Abrindo pacotes e setando diretorio de trabalho
+
+```{r, warning = FALSE, message = FALSE}
+library(tseries)
+library(dynlm)
+library(stats)
+library(lmtest)
+library(urca)
+setwd("C:\\Users\\pedro\\Desktop\\okun")
+```
+
+#### 2. Abrir o banco no R e realizar deflação da série temporal do Produto Interno Bruno (PIB) nominal  utilizando o IPCA.
+
+**Abrindo Banco de dados**
+
+```{r}
+db <- read.csv2("db.csv")
+tail(db, 10)
+```
+
+**Primeiro calculando o deflator**
+
+```{r}
+db$deflator <- 100/db$ipca2023
+```
+
+
+**Realizando deflacao da serie temporal do Produto Interno Bruno (PIB) nominal  utilizando o IPCA. (PIB real)**
+
+```{r}
+db$pib_r <- db$pib_n * db$deflator
+```
+
+#### 3. Converter o banco para um objeto ts. Utilizar como padrão o início do período da observação da variável mais antiga.
+
+**Primeira data disponivel no banco de dados e quarto trimestre de 1979**
+
+```{r}
+db.ts <- ts(db, start = c(1979, 4), frequency = 4)
+```
+
+#### 4. Obter a decomposição das séries, e a partir dos gráficos  comentar as tendências gerais no período utilizado para PIB_real e Taxa de Desocupação.
+
+**Decompondo pib_r, visualizando resultados e interpretando**
+
+```{r}
+decomp_pib_r.ts <- decompose(na.remove(db.ts[, "pib_r"]), type = "multiplicative")
+plot(decomp_pib_r.ts)
+```
+
+*interpretar*
+
+**Decompondo tx_desocupacao, visualizando resultados e interpretando**
+
+```{r}
+decomp_tx_desocupacao.ts <- decompose(na.remove(db.ts[, "tx_desocupacao"]), type = "multiplicative")
+plot(decomp_tx_desocupacao.ts)
+```
+
+*interpretar*
+
+#### 5. Para série Produto Interno Bruto (PIB) real , calcular a taxa de crescimento percentual trimestre contra trimestre da série dessazonalizada.
+
+**Removendo sazonalidade da serie pib_r**
+
+```{r}
+g_des <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+**Calculado taxa de crescimento percentual trimestre contra trimestre para série dessazonalizada**
+
+```{r}
+g_des <- (g_des - stats::lag(g_des, -1))/stats::lag(g_des, -1) *100
+```
+
+**Removendo sazonalidade da serie tx_desocupacao**
+
+```{r}
+u_des <- decomp_tx_desocupacao.ts$x - decomp_tx_desocupacao.ts$seasonal
+u <- db.ts[, "tx_desocupacao"]
+```
+
+- g_des: PIB real dessazonalizado (Calculado taxa de crescimento percentual trimestre contra trimestre) 
+- u_des: Taxa de desocupacao dessazonalizado
+
+**Visualizando g_des e u_des**
+
+```{r}
+plot(g_des)
+plot(diff(u_des))
+```
+
+#### 6. Reproduzir a lei de Okun para o caso Brasileiro com o modelo de defasagem distribuídas (utilizar defasagens finitas e infinitas), utilizando as séries PIB real e taxa de desocupação ambas dessazonalizadas. (g_des) e (u_des)
+
+- Testar se as séries são estacionárias com o teste de raiz unitária (vamos trabalhar em sala). Lembrar que esses modelos pressupõe a utilização de séries estacionárias para "fugir" do problema da correlação espúria.
+
+Um exemplo de relação espúria pode ser visto ao examinar as vendas de sorvete de uma cidade. As vendas podem ser maiores quando a taxa de afogamentos em piscinas da cidade é maior. Alegar que a venda de sorvete causa afogamento, ou vice-versa, seria implicar uma relação espúria entre os dois.
+
+**Teste de raiz unitaria de Dickey-Fuller aumentado para as series dessazonalizadas. (Vendo se g_des e u_des são estacionarias)**
+
+**g_des**
+
+```{r}
+urca_g_des <- ur.df(g_des, type = "drift")
+summary(urca_g_des)
+```
+
+Quanto indicamos o parametro "drift" indicamos um intercepto, logo, a série não inicia em "0", observar gráfico (plot(g_des)). 
+
+Obtemos os resultados de intercepto, z.lag.1, com z se referindo aos residuos e z.diff.lag. Todos significantes estatisticamente.
+
+Para rejeitarmos a H0 de não estacionariedade precisamos que o nosso test-statistic esteja dentro dos limites de pelo menos um dos 3 intervalos de tau2 (1%, 5%, 10%).
+
+- test-statistic de -11.083 
+- tau2 1pct de -3.46
+- tau2 5pct de -2.88
+- tau2 10pct de -2.57
+
+Neste caso temos test-statistic -11.083 < -3.46
+
+Conseguimos rejeitar H0 de não estacionariedade. Isto da maior seguranca na continuacao do trabalho com a série pois não precisamos nos preocupar com o problema da relacao espuria.
+
+**u_des**
+
+```{r}
+urca_u_des <- ur.df(diff(u_des), type = "trend")
+summary(urca_u_des)
+```
+
+Quanto indicamos o parametro "trend" indicamos que a série possui uma tendencia, observar gráfico (plot(u_des)). 
+
+Obtemos os resultados de intercepto, z.lag.1, com z se referindo aos residuos, tendencia (tt) e z.diff.lag. Nem todos são significativoscontudo, analisaremos o teste de raiz unitaria.
+
+Para rejeitarmos a H0 de não estacionariedade precisamos que o nosso test_statistic esteja dentro dos limites de pelo menos um dos 3 intervalos de tau3 (1%, 5%, 10%).
+
+- test-statistic de -3.8931 
+- tau3 1pct de -4.15
+- tau3 5pct de -3.50
+- tau3 10pct de -3.18
+
+Neste caso temos test-statistic -3.8931 < -3.50 contudo maior que -4.15, portanto, rejeitamos H0 de não estacionariedade em 5%
+
+Realizar a transformacao de 1 diferenca, como a de trimestre contra trimestre e a taxa de desocupacao com lag 1 é um modo de deixar uma série estacionaria.
+
+*Conseguimos confirmar estacionariedade das series. Portanto, vamos estimar o modelo ad hoc*
+
+- Estimar o modelo pelo método ad hoc (defasagens finitas). Interpretar!
+
+```{r}
+mod_dinf <- dynlm(d(u_des)  ~ L(g_des, 0:2))
+summary(mod_dinf)
+```
+
+*interpretar*
+
+**Teste de raiz unitaria dos residuos com o teste de Dickey-Fuller**
+
+**Para rejeitarmos a H0 temos que ter p-value < 0.05**
+
+- H0: Nao estacionariedade
+- HA: Estacionariedade
+
+```{r}
+adf.test(mod_dinf$residuals)
+plot(resid(mod_dinf))
+```
+
+Para o teste de Dickey-Fuller conseguimos rejeitar H0 de não estacionariedade. Podemos também realizar o teste do de raiz unitaria aumentado de Dickey-Fuller.
+
+```{r}
+urca_mod_dinf <- ur.df(mod_dinf$residuals, type = "none")
+summary(urca_mod_dinf) 
+```
+
+Dado a caracteristica dos residuos, observar plot (plot(resid(mod_dinf))), utilizamos "none", isto não adiciona intercepto e nem tendencia.
+
+Para rejeitarmos a H0 de não estacionariedade precisamos que o nosso test_statistic esteja dentro dos limites de pelo menos um dos 3 intervalos de tau1 (1%, 5%, 10%).
+
+- test-statistic de -3.5609
+- tau1 1pct de -2.62
+- tau1 5pct -1.95
+- tau1 10pct -1.61
+
+Neste caso temos test-statistic -3.56091 < -2.62 
+
+Assim rejeitamos H0 de não estacionariedade
+
+**Realizando po.test (Cointegração). Ele deve ser feito para o modelo sem defasagem.**
+
+*Adicionaremos tambem o teste de cointegracao, ele é utilizado caso não consiga atestar estacionariedade da série com o teste de raiz unitaria.*<br>
+*Se não conseguimos atestar estacionariedade nao conseguimos resolver o problema da relacao espuria, dificultando trabalho futuro com a série*<br>
+*O teste de cointegracao identifica cenarios em que duas ou mais series temporais não estacionarias são integradas de forma que não possam desviar do equilibrio no longo prazo, em outras palavras, elas possuem uma relacao de longo prazo, fugindo do problema de relacao espuria* 
+
+**Para rejeitarmos a H0 temos que ter p-value < 0.05**
+
+- H0: Não cointegracao
+- HA: Cointegracao
+
+```{r}
+mod_dinf2 <- dynlm(d(u_des)  ~ L(g_des))
+```
+
+```{r}
+po.test(as.matrix(mod_dinf2$model))
+```
+
+*O Teste de raiz unitária nos resíduos, é, conceitualmente, a mesma coisa que o teste de cointegração. (Testar cointegração é testar se os resíduos são estacionários).*
+
+*interpretar*
+
+- Estimar o modelo pelo método da transformação de Koyck (defasagens infinitas). Interpretar!
+   
+```{r}
+mod_dinf_koyck <- dynlm(d(u_des)  ~ L(d(u_des)) + g_des)
+summary(mod_dinf_koyck)
+```
+
+*interpretar*
+
+- No modelo de defasagem infinita de koyck, testar se existe auto-correlação dos resíduos. Caso exista, indicar e realizar o procedimento necessário para correção dos erros padrão das estimativas e, portanto, interpretação dos testes de significância t e F. 
+
+**Investigando correlograma mod_dinf_koyck**
+
+```{r}
+acf(resid(mod_dinf_koyck))
+```
+
+*interpretar correlograma*
+
+**Teste de ausencia de autocorrelacao.**
+
+**Para rejeitarmos a H0 temos que ter p-value < 0.05**
+
+- H0: Ausencia de autocorrelacao 
+- HA: Autocorrelacao
+
+*Nao queremos rejeitar H0, pois o ideal seria ter uma serie sem autocorrelacao.*
+
+```{r}
+bgtest(mod_dinf_koyck) 
+```
+
+*interpretar*
+
+**Teste de raiz unitaria Deickey-Fuller aumentado**
+
+```{r}
+urca_mod_dinf_koyck <- ur.df(mod_dinf_koyck$residuals, type = "none")
+plot(mod_dinf_koyck$residual)
+summary(urca_mod_dinf_koyck)
+```
+
+Dado a caracteristica dos residuos, observar plot (plot(mod_dinf_koyck$residual))), utilizamos "none", isto não adiciona intercepto e nem tendencia.
+
+Para rejeitarmos a H0 de não estacionariedade precisamos que o nosso test_statistic esteja dentro dos limites de pelo menos um dos 3 intervalos de tau1 (1%, 5%, 10%).
+
+- test-statistic de -5.279
+- tau1 de -2.62
+- tau1 de -1.95
+- tau1 de -1.61
+
+Neste caso temos test-statistic -5.279 < -2.62 
+
+Assim rejeitamos H0 de não estacionariedade
+
+**Realizando po.test (Cointegração)**
+
+```{r}
+po.test(as.matrix(mod_dinf_koyck$model))
+```
+
+*interpretar*
+
+#### 7. Fazer a previsão para o ano de 2023 da série da taxa de desocupação dessazonalizada, utilizando o método Holt Winters. 
+
+**Utilizando HoltWinters**
+
+```{r}
+u.hw <- HoltWinters(na.remove(u), seasonal = "multiplicative")
+plot(u.hw)
+```
+
+**Previsão para os proximos 3 trimestres. (Até 4 trimestre de 2023)**
+
+```{r}
+u.hw_predict <- predict(na.remove(u.hw), n.ahead = 3)
+ts.plot(na.remove(u) ,u.hw_predict, lty = 1:2)
+```
+
+```{r}
+u.hw_predict
+```
+
+*interpretar*

@@ -1,0 +1,2289 @@
+---
+title: "Prova Lab. Econometria II - Noturno"
+author: ""
+date: ""
+output: 
+  html_document:
+    theme: journa
+    highlight: espresso
+    toc: yes
+---
+## Portugal
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "PT") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Italia
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "IT") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Sweden
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "SE") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Poland
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "PL") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Norway
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "NO") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Netherlands
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "NL") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Ireland
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "IE") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Hungry
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "HU") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## France
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "FR") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Finland
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "FI") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Denmark
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "DK") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Germany
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "DE") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Belguim
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "BE") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Austria
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "AT") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
+
+## Spain
+
+#### Antes de Iniciar a Prova - Conferir
+
+**Pacotes Necessários**
+
+Caso não tenha instalados realizar o download.
+
+```{r, warning = FALSE, message = FALSE}
+library(stats)
+library(tseries)
+library(dynlm)
+library(lmtest)
+library(urca)
+library(stringr)
+setwd("C:\\Users\\pedro\\Desktop\\p2")
+```
+
+**Abrindo Banco de Dados pelo GITHUB**
+
+NÃO ALTERAR O CÓDIGO ABAIXO.
+
+```{r}
+#df <- read.csv2(file = url("https://raw.githubusercontent.com/PedroTL/lab-econometria-2/main/df_p2/df_p2.csv")) # Abrindo dados GITHUB
+#df <- df[, c(1, 2, 3, 9, 10)] # Selecionando Colunas
+df <- read.csv2("df_p2222.csv")
+df <- df[, c(1, 2, 3, 10, 9)]
+head(df) # Visualizando estrutura
+```
+
+**Realizando filtro para SEU país**
+
+Baseado no país assinado no EXCEL para o **SEU** nome, realizar filtro abaixo. 
+
+- Apenas altere para a sigla simplificada (2 Letras) dentro das aspas, como no exemplo abaixo. 
+- João Pedro | Random: 50 | Cod. País: 50 | country: BR | country_full: Brasil
+
+```{r}
+df <- subset(df, country == "ES") # Altere aqui seu país (Formato de duas Letras)
+df <- df[complete.cases(df), ] # Removendo linhas que possam ter NA
+```
+
+Confirme a estrutura do Banco de Dados, incluindo ordem das variavels, nomes e país filtrado acima. (Seu banco de dados deve conter apenas o **SEU PAÍS**)
+
+- date | country | country_full | consumption_r | income_r
+
+```{r}
+head(df)
+```
+
+Transformando em TS
+
+```{r}
+df.ts <- ts(df, start = c(2000, 1), frequency = 4)
+```
+
+Decompondo consumption_r e income_r
+
+```{r}
+decomp_consumption_r.ts <- decompose(df.ts[, "consumption_r"], type = "additive")
+decomp_pib_r.ts <- decompose(df.ts[, "pib_r"], type = "additive")
+```
+
+```{r}
+plot(decomp_consumption_r.ts)
+plot(decomp_pib_r.ts)
+```
+
+Dessazonalizar as séries
+
+```{r}
+des_cons_r_decomp.ts <- decomp_consumption_r.ts$x - decomp_consumption_r.ts$seasonal
+des_pib_r_decomp.ts <- decomp_pib_r.ts$x - decomp_pib_r.ts$seasonal
+```
+
+```{r}
+plot(des_cons_r_decomp.ts)
+plot(des_pib_r_decomp.ts)
+```
+
+Taxa de crescimento percentual para consumo e renda dessazonalizada
+
+```{r}
+tx_des_cons_r_decomp.ts <- (des_cons_r_decomp.ts - stats::lag(des_cons_r_decomp.ts, -1))/stats::lag(des_cons_r_decomp.ts, -1) * 100
+tx_des_pib_r_decomp.ts <- (des_pib_r_decomp.ts - stats::lag(des_pib_r_decomp.ts, -1))/stats::lag(des_pib_r_decomp.ts, -1) * 100
+```
+
+```{r}
+plot(tx_des_cons_r_decomp.ts)
+plot(tx_des_pib_r_decomp.ts)
+```
+
+Teste de raiz unitaria para as quatro séries tx_des_cons_r_decomp.ts, tx_des_inco_r_decomp.ts, consumption_r e income_r
+
+```{r}
+urca_tx_des_cons_r_decomp.ts <- ur.df(tx_des_cons_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_tx_des_pib_r_decomp.ts <- ur.df(tx_des_pib_r_decomp.ts, type = "none") # Sem intercepto nem tendencia
+urca_des_cons_r_decomp.ts <- ur.df(log(des_cons_r_decomp.ts), type = "drift") 
+urca_des_pib_r_decomp.ts <- ur.df(log(des_pib_r_decomp.ts), type = "drift") 
+```
+
+```{r}
+summary(urca_tx_des_cons_r_decomp.ts)
+summary(urca_tx_des_pib_r_decomp.ts)
+summary(urca_des_cons_r_decomp.ts)
+summary(urca_des_pib_r_decomp.ts)
+```
+
+### Modelo Koyck 
+
+```{r}
+mod_koyck <- dynlm(tx_des_cons_r_decomp.ts ~ L(tx_des_cons_r_decomp.ts) + tx_des_pib_r_decomp.ts)
+```
+
+```{r}
+summary(mod_koyck)
+```
+
+Autocorrelacao modelo Koyck
+
+```{r}
+acf(resid(mod_koyck))
+```
+
+```{r}
+bgtest(mod_koyck)
+```
+
+### Log
+
+```{r}
+mod_log <- dynlm(log(des_cons_r_decomp.ts) ~ log(des_pib_r_decomp.ts) + L(log(des_cons_r_decomp.ts)))
+```
+
+```{r}
+summary(mod_log)
+```
+
+Autocorrelacao modelo Log
+
+```{r}
+acf(resid(mod_log))
+```
+
+```{r}
+bgtest(mod_log)
+```
+
+___
+
+___
