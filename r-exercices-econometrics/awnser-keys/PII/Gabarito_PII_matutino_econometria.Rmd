@@ -5,6 +5,9 @@ date: ''
 output: html_document
 ---
 
+<style>body {text-align: justify}</style>
+
+
 ```{r}
 load(url("https://github.com/ccolonescu/PoEdata/raw/master/data/utown.rda"))
 ```

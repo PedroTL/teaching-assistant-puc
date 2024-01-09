@@ -1,0 +1,137 @@
+---
+title: "Gabarito PII - Matutino"
+author: "João Pedro"
+date: ""
+output: html_document
+---
+
+<style>body {text-align: justify}</style>
+
+```{r}
+options(scipen=999)
+load(url("https://github.com/ccolonescu/PoEdata/raw/master/data/cps4.rda"))
+head (cps4)
+```
+
+Descrição do Banco de Dados
+
+4838 Observações com as seguintes variáveis
+
+- wage: Salário por hora
+- educ: Anos de educação
+- exper: Anos de experiência após a educação
+- fulltime: = 1 se empregado em período integral
+- hrswk: Horas habituais trabalhadas por semana
+- nkids: Número de filhos vivendo junto
+- age: Idade em anos
+- married: = 1 se casado
+- female: = 1 se mulher
+- insurance: = 1 se coberto por seguro saúde
+- private: = 1 se seguro privado coberto
+- mcaid: = 1 se seguro Medicaid coberto
+- mcare: = 1 se seguro Medicare coberto
+- metro: = 1 se vive em área metropolitana
+- northeast: = 1 se vive no nordeste
+- midwest: = 1 se vive no meio-oeste
+- south: = 1 se vive no sul
+- west: = 1 se vive no oeste
+- white: = 1 se branco
+- black: = 1 se negro
+- asian: = 1 se asiático
+
+#  {.tabset}
+
+## Questão 1
+
+**Proponha (FRA), estime e interprete numericamente um modelo de regressão (Simples ou Múltipla)** (2.0 pts) <br>
+(1.0 ponto adicional para quem estimar regressão multipla)
+
+O modelo proposto foi: 
+
+$$\hat {wage} = \hat {\beta_1} + \hat \beta_2 {educ} + \hat \beta_3 {exper} + \hat \beta_4{female}$$
+
+Após as estimativas a equação do modelo é: 
+
+$$\hat {wage} = -11.04791 + 2.15652  {educ} + 0.14904 {exper} - 5.04067 {female}$$
+
+
+```{r}
+modelo <- lm(wage ~ educ + exper + female, data = cps4)
+summary(modelo)
+```
+
+O `intercepto` **-11.04791** significa qual o valor do salário-hora caso as variáveis independentes sejam 0. 
+
+Para a variável `educ` temos: O aumento de uma unidade (Anos de Educação) da variável em questão, impacta, positivamente, em média, e tudo mais constante, em **2.15652** dólares no salário-hora.
+
+Para a variável `exper` temos: O aumento de uma unidade (Anos de Experiência) da variável em questão, impacta, positivamente, em média, e tudo mais constante, em   **0.14904** dólares no salário-hora
+
+Para a variável `female` temos: Considerando tudo ou mais constante, que mulheres ganham em média **5.04067** a menos por hora, quando comparadas com os homens.
+
+---
+
+#  {.tabset}
+
+## Questão 2
+
+**Em relação à análise da variância da variável dependente:**<br>
+**a) Interprete o cieficiente de determinação R2** (1.0 pt)<br>
+
+O modelo fornece um `Multiple R-squared` de **0.2504**, sendo a proporção da variação explicada pela linha de regressão. Isso significa que aproximadamente **25,04%** da variabilidade da variável dependente é explicada pelas variáveis independentes incluídas no modelo. A análise pode ser feita também, por meio do ` Adjusted Multiple R-squared`. 
+
+**b) Quantos porcento da variabilidade do modelo é explicada pelos resíduos?** (1.0 pt)
+
+Dado que as variáveis independentes explicam, em média, **25,04%** da variabilidade da variável dependente, os resíduos, portanto, explicam **74,96%** do restante, devido à aleatoriedade  e fatores não incluídos no modelo.
+
+---
+
+#  {.tabset}
+
+## Questão 3
+
+**Em relação à significância estatística:**<br>
+**a) Comente os resultados do teste t de significância individual. Destaque as hipóteses do teste, o cálculo de estatística t e explique o que esses resultados significam.** (2.0 pts)<br>
+
+Tanto `Intercepto` quando as variáveis `independentes` apresentam significância estatística, ao nível de significância $\alpha = 0.05$. 
+
+Em estatística, quando rejeitamos a hipótese nula do teste $t$ com $H0:\beta =0$, afirmamos que nossos resultados são estatisticamente significativos. Por outro lado, ao falhar em rejeitar a hipótese nula do teste $t$, consideramos que os resultados não são estatisticamente significativos.
+
+Em termos gerais, um teste de significância é um procedimento para avaliar se os resultados amostrais suportam ou refutam uma hipótese sobre os resultados populacionais. 
+
+Para este teste, as hipóteses nulas e alternativas são:
+
+Temos, individualmente e respectivamente: $H0$ $\beta_1 = 0$, $\beta_2 = 0$,  $\beta_3 = 0$, $\beta_4 = 0$
+
+Temos, individualmente e respectivamente: $HA$ $\beta_1 \neq 0$, $\beta_2 \neq 0$,  $\beta_3 \neq 0$, $\beta_4 \neq 0$
+
+Com nível de significancia em $\alpha =0.05$ rejeitamos $H0$ quando $|t| > t_{\alpha/2,gl}$, onde $t_{\alpha/2}$ representa o valor crítico de $t$  para um nível de significância $\alpha/2$ e $gl$ são os graus de liberdade $n-3$. De maneira mais direta, rejeitamos $H0$ quando $valor \; p \leq  \alpha$.
+
+A estatística $t$ é calculada pela fórmula:
+
+
+$$t = \frac {\hat \beta_k - \beta_k} {ep(\hat \beta_k)} $$
+
+Os resultados significam que é razoavel inferir que mudanças nas variáveis independentes estão associadas a mudanças na variável dependente, conforme observado nos resultados amostrais.
+
+**b) Comente o resultado do teste de F de significância geral. Destaque as hipóteses e explique o que esse resultado significa.** (2.0 pts)<br>
+
+Para este modelo o teste $F$ traz um valor $p < 0.05$, mostrando que apresenta significância estatística.
+
+Não podemos empregar o teste $t$ para verificar a hipótese conjunta de que os verdadeiros coeficientes parciais angulares são simultaneamente iguais a zero. Para isto temos o teste $F$, com :
+
+$H0$: $\beta_1 = \beta_2 = \beta_3 = \beta_4 = 0$
+
+$HA$: Pelo menos um dos coeficientes das variáveis independentes é significativamente diferente de zero.
+
+$$F = \frac {SQE/gl} {SQR/gl} = \frac {SQE(k-1)} {SQR/n-k}$$
+
+Se o valor de $p$ de $F$ obtido pela equação acima for menor que um nível de sginificância, diga-se $\alpha=0.05$, rejeitaremos $H0$
+
+Isto significa que modelo de regressão linear na totalidade é estatisticamente significativo.
+
+**c) Qual hipótese adicional que incuímos ao modelo de regressão clássico (MCRL) para sustentar os testes de hipótese realizados acima? O que tal hipótese garante sobre a distribuição de propabilidade dos coeficientes estimados em amostras repetidas?** (2.0 pts)
+
+Consideramos a hipótese da normalidade dos erros, sendo independentes e normalmente distribuídos com média zero e variância constante (homoscedasticidade). Sendo assim, em amostras repetidas, os coeficientes estimados possuem distribuição normal. Quando os erros não são normalmente distribuídos, os resultados dos testes de hipóteses podem ser enviesados em amostras pequenas.
+
+---
+

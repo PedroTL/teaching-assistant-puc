@@ -1,0 +1,78 @@
+---
+title: "PII - Contabilometria Noturno"
+author: "João Pedro"
+date: "2023-12-10"
+output: html_document
+---
+
+```{r, include = FALSE,echo = FALSE}
+options(scipen=999)
+load(url("https://github.com/ccolonescu/PoEdata/raw/master/data/br.rda"))
+```
+
+Descrição Variáveis do Banco de Dados `br`
+
+1080 observações de casas a venda em Baton Rouge, LA durante 2005
+
+- price: preço de venda, em dólares
+- sqft: área total em pés quadrados
+- bedrooms: número de quartos
+- baths: número de banheiros completos
+- age: idade em anos
+- occupancy: Ocupação - Proprietário = 1, Vago = 2, Inquilino = 3
+- pool: Piscina - Sim = 1, Não = 0
+- style: Estilo - Tradicional = 1, Townhouse = 2, Ranch = 3, New Orleans = 4, Mobile Home = 5, Garden = 6, French = 7, Cottage = 8, Contemporâneo = 9, Colonial = 10, Acadian = 11
+- fireplace: Lareira - Sim = 1, Não = 0
+- waterfront: Frente para a água - Sim = 1, Não = 0
+- dom: Dias no mercado
+
+Modelo de preço de venda em dolares da casa em função da área total em pés quadrados, idade em anos e se a casa esta ou não de frente para água
+
+```{r}
+modelo_br <- lm(price ~ sqft + age + waterfront, data = br) 
+summary(modelo_br)
+```
+
+#  {.tabset}
+
+## Questão 1
+
+**Escreva a equação linear do modelo com os coeficientes estimados. (2.5)**
+
+$$
+\hat Y = \hat \beta_1 + \hat \beta_2 + \hat \beta_3 + \hat \beta_4
+$$
+
+$$
+\hat {price} = -41680.188 + 87.596sqft - 615.270age + 67059.289waterfront
+$$
+
+#  {.tabset}
+
+## Questão 2
+
+**2.	Interprete os coeficientes estimados. (2.5)**
+
+O `intercepto` **-41680.188** significa qual o valor do preço da casa, caso as variáveis independentes sejam 0. Apesar de possuir significância estatística, a razão econômica não permite um preço de casa negativo.
+
+Para a variável `sqft` temos: O aumento de uma unidade (pés quadrados) da variável em questão, impacta em média **87.596** no preço da casa em dólares.
+
+Para a variável `age` temos: O aumento de uma unidade (Anos da casa) da variável em questão, impacta em média **-615.270** no preço da casa.
+
+Para a variável `waterfront` temos: Considerando tudo ou mais constante, casas de frente para água custam em média **67057.289** a mais.
+
+#  {.tabset}
+
+## Questão 3
+
+**3. Seus resultados são individualmente significativos do ponto de vista estatístico? Explique interpretando o teste t. (2.5)**
+
+O `intercepto`, e todas as variáveis independentes apresentam significância estatística $p-value < 0.05$. Um $p-value < 0.05$ indica que a diferença entre as médias das duas amostras é improvável de ter ocorrido apenas por acaso, assumindo que a hipótese nula $HO$ seja verdadeira. Portanto, a interpretação do teste t com um $p-value < 0.05$ indica que há uma probabilidade baixa de que a diferença observada nas médias das amostras seja devida ao acaso, permitindo fazer inferências na população com base na amostra.
+
+#  {.tabset}
+
+## Questão 4
+
+**4.	Quanto o seu modelo explica da variabilidade da variável dependente? Explique interpretando R2. (2.5)**
+
+De modo geral, o `R-Squared` é uma medida estatística que representa a proporção da variabilidade da variável dependente explicada pelas variáveis independentes no modelo de regressão, neste caso o valor do `R-Squared` é de **0.6083**. Portanto, as variáveis independentes explicam em aproximadamente **60,83%** da variabilidade da variável dependente `price`.

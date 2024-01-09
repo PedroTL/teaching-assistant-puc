@@ -1,0 +1,66 @@
+---
+title: "Gabarito - Exercício Regressão Linear Múltipla"
+author: "João Pedro"
+date: "2023-12-02"
+output: html_document
+---
+
+
+```{r}
+pacman::p_load(AER, install = TRUE)         # Abrindo Pacote Applied Econometrics with R (AER)
+```
+
+```{r}
+data(CollegeDistance)                       # Abrindo Banco de Dados
+CollegeDistance <- CollegeDistance[, 0:11]  # Selecionando colunas
+head(CollegeDistance)                       # Visualizando Dados
+```
+
+**Informações do Banco de Dados:**
+
+Dados de corte de censo Ensino médio conduzido pelo departamento de educação em 1980. Incluí aproximadamente 1.100 escolas
+
+Descrição das Variáveis:
+
+- `gender`: Binária indicando genero.
+- `ethnicity`: Binária indicando etnia.
+- `score`: Pontuação do teste composto do ano base. 
+- `fcollege`: Binária. O pai é graduado na universidade?
+- `mcollege`: Binária. A mãe é graduada na universidade?
+- `home`: Binária. A família possuí casa?
+- `urban`: Binária. Escola em área urbana?
+- `unemp`: Taxa de desemprego no estado em 1980
+- `wage`: Salário hora em manufatura no estado em 1980.
+- `distance`: Distancia de 4 anos da universidade.
+- `tuition`: Mensalidade média da faculdade estadual de 4 anos (em 1000 USD) no estado do estudante.
+
+#  {.tabset}
+
+## Questão 1
+
+**Construa um modelo de Regressão Linear Múltipla, escrevendo sua FRA estocástica. Justifique a razão, assim como o impacto esperado das variáveis. O modelo deve conter uma variável dependente e ao menos 2 variáveis independentes, dentre elas, uma categórica (Binária).**
+
+```{r}
+mod <- lm(score ~ tuition + wage + fcollege, data = CollegeDistance)
+summary(mod)
+```
+
+---
+
+#  {.tabset}
+
+## Questão 2
+
+**Interprete `summary()`:**
+ 
+  - Coeficientes estimados (Impactos)
+  - significância estatística (Variáveis, Modelo, teste-t)
+  - R2
+  
+---
+
+#  {.tabset}
+
+## Questão 3
+
+**Seu modelo segue todas as expectativas estabelecidas na questão (1)? Comente.**
